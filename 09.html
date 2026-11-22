@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第9章 语言识别与初步清洗</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第9章 · 语言识别与初步清洗</h1>
+            <p class="dek">清洗流水线的第一关：fastText / CLD3 如何做语言识别，Gopher 与 C4 的启发式规则如何层层剥掉乱码、模板与垃圾页。</p>
+        </header>
         <h2>找对语言，筛掉垃圾：清洗流水线的第一关</h2>
 
         <p>大家好，我是你们的讲师。上一章我们把 WARC 文件里的 HTML 解析成了原始文本——但这只是万里长征第一步。打开一个刚解析完的文本文件夹，你会发现里面什么都有：英文、中文、阿拉伯文、乱码、只有标点符号的页面、全是 URL 列表的页面……最夸张的一次，我看到一个"文章"居然是一个 YouTube 视频的 2,000 条自动翻译评论的拼接体——中文夹杂着泰语，中间还混了一段 Python traceback。</p>
@@ -50,6 +56,53 @@
         <p>如果把这堆东西直接喂给模型，后果不堪设想。这就是为什么在数据流水线的第二个阶段，我们需要做两件事：<strong>语言识别</strong>（确定每篇文档的语言并筛选目标语言）和<strong>初步清洗</strong>（用一系列启发式规则快速剔除明显的低质量文本）。</p>
 
         <p>业界经过多年实践，已经沉淀出一套比较成熟的"过滤管道"——从 fastText 语言分类器到 Gopher/C4/FineWeb 的启发式过滤器。这一章我们来逐一拆解。</p>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-cl-title fig-cl-desc" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-cl-title">清洗流水线的第一关：语言识别与两级启发式过滤</title>
+                <desc id="fig-cl-desc">四个串联阶段：语言识别（fastText / CLD3）、Gopher 规则、C4 附加规则、输出。每个过滤阶段下方列出其判定条件。</desc>
+                <rect width="720" height="300" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="20" y="26" font-size="15" fill="#4c1d95">文档 → 语言识别 → Gopher 规则 → C4 附加规则 → 保留</text>
+                    <g stroke-width="3" fill="none" stroke="#7c3aed">
+                        <path d="M170 78 H193"/><path d="M335 78 H358"/><path d="M500 78 H523"/>
+                    </g>
+                    <g fill="#ede9fe" stroke="#8b5cf6">
+                        <rect x="30" y="48" width="140" height="60" rx="12"/>
+                        <rect x="195" y="48" width="140" height="60" rx="12" fill="#e0f2fe" stroke="#0ea5e9"/>
+                        <rect x="360" y="48" width="140" height="60" rx="12" fill="#fef3c7" stroke="#f59e0b"/>
+                        <rect x="525" y="48" width="140" height="60" rx="12" fill="#d1fae5" stroke="#10b981"/>
+                    </g>
+                    <g font-size="14" font-weight="600" text-anchor="middle" fill="#3b2d6b">
+                        <text x="100" y="74">语言识别</text>
+                        <text x="265" y="74">Gopher 规则</text>
+                        <text x="430" y="74">C4 附加规则</text>
+                        <text x="595" y="74">保留</text>
+                    </g>
+                    <g font-size="11.5" text-anchor="middle" fill="#5b6472">
+                        <text x="100" y="94">fastText / CLD3</text>
+                        <text x="265" y="94">文档级启发式</text>
+                        <text x="430" y="94">网页特定规则</text>
+                        <text x="595" y="94">进入去重环节</text>
+                    </g>
+                    <g font-size="12" fill="#334155">
+                        <text x="30" y="150">· 176（fastText）/ 107（CLD3）种语言</text>
+                        <text x="30" y="172">· 置信度阈值：长文 0.5，短文 0.7</text>
+                        <text x="30" y="194">· 低于阈值或混合语言直接丢弃</text>
+                        <text x="200" y="150">· 词数 50 – 100,000</text>
+                        <text x="200" y="172">· 重复行占比 ≤ 30%</text>
+                        <text x="200" y="194">· 字母字符 ≥ 70%，符号 ≤ 30%</text>
+                        <text x="200" y="216">· 停用词覆盖要求</text>
+                        <text x="370" y="150">· 结尾需为终端标点</text>
+                        <text x="370" y="172">· 脏词表（~400 词）命中即丢</text>
+                        <text x="370" y="194">· 花括号占比 ≤ 1%</text>
+                    </g>
+                    <text x="20" y="262" font-size="12.5" fill="#64748b">各项阈值取自 9.1–9.4 节；中文场景常需放宽“终端标点”等面向英文的规则。</text>
+                    <text x="20" y="284" font-size="12.5" fill="#64748b">过滤链是串行的：任一阶段判为不合格即丢弃文档。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 9-1</span>语言识别在最前：先确定语言与置信度，再依次通过 Gopher 的文档级规则与 C4 的网页特定规则。任一阶段不通过即被丢弃——这就是“串行过滤链”的拓扑。</figcaption>
+        </figure>
 
         <h2>9.1 fastText 语言分类器</h2>
 
@@ -356,7 +409,7 @@ print(gopher_quality_filter(bad_text))   # False</code></pre>
             <a href="index.html">📖 返回目录</a>
             <a href="10.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
