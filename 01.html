@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第1章 预训练数据决定模型上限</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html" class="active">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第1章 · 预训练数据决定模型上限</h1>
+            <p class="dek">从 GIGO 原则到 Chinchilla 最优配比：为什么在参数、算力、数据三要素中，数据才是当前最难复制的护城河。</p>
+        </header>
         <h2>开篇：数据，才是真正的护城河</h2>
 
         <p>大家好，我是你们的讲师。今天我们要聊一个常被忽略、却决定大模型成败的关键话题——<strong>预训练数据</strong>。</p>
@@ -101,6 +107,35 @@
             </tbody>
         </table>
 
+        <figure>
+            <svg role="img" aria-labelledby="fig-gigo-title fig-gigo-desc" viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-gigo-title">架构与数据质量的四种组合</title>
+                <desc id="fig-gigo-desc">横轴为数据质量，纵轴为模型架构。先进架构搭配高质量数据（A）最佳；先进架构遇到低质量数据（C）反而弱于简化架构搭配高质量数据（B）。</desc>
+                <rect width="720" height="330" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="258" y="34" text-anchor="middle" font-size="15" fill="#5b21b6">低质量数据</text>
+                    <text x="534" y="34" text-anchor="middle" font-size="15" fill="#5b21b6">高质量数据</text>
+                    <text x="14" y="112" font-size="15" fill="#5b21b6">先进架构</text>
+                    <text x="14" y="260" font-size="15" fill="#5b21b6">简化架构</text>
+                    <rect x="132" y="48" width="252" height="120" rx="12" fill="#fee2e2" stroke="#f3b5b5"/>
+                    <rect x="408" y="48" width="252" height="120" rx="12" fill="#d1fae5" stroke="#8fd8b8"/>
+                    <rect x="132" y="196" width="252" height="120" rx="12" fill="#f1f5f9" stroke="#cbd5e1"/>
+                    <rect x="408" y="196" width="252" height="120" rx="12" fill="#e0f2fe" stroke="#a7d4ef"/>
+                    <g font-size="15" fill="#334155">
+                        <text x="150" y="78">C · MoE + 低质量</text>
+                        <text x="150" y="104" font-size="13" fill="#b91c1c">放大噪声，不如 B</text>
+                        <text x="426" y="78">A · MoE + 高质量</text>
+                        <text x="426" y="104" font-size="13" fill="#15803d">最佳性能</text>
+                        <text x="150" y="226">· 简化架构 + 低质量</text>
+                        <text x="150" y="252" font-size="13" fill="#64748b">容量与数据双受限</text>
+                        <text x="426" y="226">B · 简化架构 + 高质量</text>
+                        <text x="426" y="252" font-size="13" fill="#0369a1">接近 SOTA</text>
+                    </g>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 1-1</span>对应 1.1 节实验场景的对照：<strong>架构再先进也无法突破数据质量设定的上限</strong>；场景 C（先进架构 + 低质量数据）的预期效果明确劣于场景 B（简化架构 + 高质量数据）。教学示意，非某次真实训练的实测数据。</figcaption>
+        </figure>
+
         <p>场景 C 和 D 揭示了一个残酷的事实：<strong>当一个模型用低质量数据训练时，更先进的架构反而可能成为放大噪声的工具</strong>——MoE 的 Expert Specialization 会学习到数据中的错误模式，注意力机制会在噪声序列上建立虚假相关性。换言之，数据质量是模型能力的"天花板"，架构创新只是努力去够到这个天花板。</p>
 
         <div class="tip">
@@ -124,6 +159,18 @@
   7B 模型 → 至少需要 140B tokens 的数据
   70B 模型 → 至少需要 1.4T tokens 的数据
   175B 模型 → 至少需要 3.5T tokens 的数据</code></pre>
+
+        <div class="math-equation" role="group" aria-label="Chinchilla 最优训练 token 数约等于参数量 N 的 20 倍">
+            <div class="math-scroll" data-math-scroll tabindex="0" role="region" aria-label="Chinchilla 最优配比公式，可横向滚动">
+                <math display="block" aria-label="D opt 约等于 20 乘以 N">
+                    <mrow>
+                        <msub><mi>D</mi><mtext>opt</mtext></msub>
+                        <mo>≈</mo>
+                        <mn>20</mn><mo>×</mo><mi>N</mi>
+                    </mrow>
+                </math>
+            </div>
+        </div>
 
         <p>这意味着什么？看看 GPT-3 的数据就知道了：1,750 亿参数的模型仅用了约 3,000 亿 token 训练，Chinchilla 最优值（3.5T）的 <strong>不到 10%</strong>。换句话说，GPT-3 当时远未被训练到极限——不是算力不够，而是数据不够多。</p>
 
@@ -213,7 +260,7 @@
             <a href="index.html">📖 返回目录</a>
             <a href="02.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
