@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第6章 许可证合规与数据安全红线</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第6章 · 许可证合规与数据安全红线</h1>
+            <p class="dek">2026 年合规不是选择题：数据集许可证的红黄绿分级、EU AI Act 对数据工程的约束、PII 脱敏与审计工作流。</p>
+        </header>
         <h2>开篇：2026 年，合规不是选择题</h2>
 
         <p>大家好，我是你们的讲师。前几章我们一直在谈"怎么找到好数据"和"怎么清理数据"。但作为一名数据工程师，有一件事比数据质量更重要——<strong>数据合规</strong>。</p>
@@ -87,6 +93,55 @@
                 </tr>
             </tbody>
         </table>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-lic-title fig-lic-desc" viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-lic-title">数据集许可证的红黄绿三级分类</title>
+                <desc id="fig-lic-desc">三栏对比：绿灯（Apache 2.0 / MIT / CC BY，可商用）、黄灯（ODC-BY / CC BY-SA / ImpACT，需注意署名）、红灯（非商业或版权争议子集，严格禁止商用）。</desc>
+                <rect width="720" height="320" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="20" y="26" font-size="15" fill="#4c1d95">数据集合规红绿灯（来自 6.1 节表）</text>
+                    <g stroke-width="2">
+                        <rect x="30" y="46" width="210" height="44" rx="12" fill="#d1fae5" stroke="#10b981"/>
+                        <rect x="255" y="46" width="210" height="44" rx="12" fill="#fef3c7" stroke="#f59e0b"/>
+                        <rect x="480" y="46" width="210" height="44" rx="12" fill="#fee2e2" stroke="#ef4444"/>
+                        <rect x="30" y="90" width="210" height="180" rx="12" fill="#f6fffb" stroke="#a7f3d0"/>
+                        <rect x="255" y="90" width="210" height="180" rx="12" fill="#fffdf3" stroke="#fde68a"/>
+                        <rect x="480" y="90" width="210" height="180" rx="12" fill="#fff6f6" stroke="#fecaca"/>
+                    </g>
+                    <g font-size="15" font-weight="700" text-anchor="middle">
+                        <text x="135" y="75" fill="#166534">🟢 绿灯</text>
+                        <text x="360" y="75" fill="#b45309">🟡 黄灯</text>
+                        <text x="585" y="75" fill="#b91c1c">🔴 红灯</text>
+                    </g>
+                    <g font-size="12.5" fill="#334155">
+                        <text x="44" y="116" font-weight="600">许可证</text>
+                        <text x="44" y="136">Apache 2.0 / MIT / CC BY</text>
+                        <text x="44" y="166" font-weight="600">代表数据集</text>
+                        <text x="44" y="186">RedPajama / SlimPajama</text>
+                        <text x="44" y="204">Falcon RefinedWeb / SkyPile</text>
+                        <text x="44" y="234" font-weight="600">商业使用</text>
+                        <text x="44" y="254" fill="#166534">完全允许</text>
+                        <text x="269" y="116" font-weight="600">许可证</text>
+                        <text x="269" y="136">ODC-BY / CC BY-SA / ImpACT</text>
+                        <text x="269" y="166" font-weight="600">代表数据集</text>
+                        <text x="269" y="186">C4 / mC4 / Dolma</text>
+                        <text x="269" y="204">The Stack (Dedup)</text>
+                        <text x="269" y="234" font-weight="600">商业使用</text>
+                        <text x="269" y="254" fill="#b45309">允许，需“署名”</text>
+                        <text x="494" y="116" font-weight="600">许可证</text>
+                        <text x="494" y="136">非商业 / 版权争议子集</text>
+                        <text x="494" y="166" font-weight="600">代表数据集</text>
+                        <text x="494" y="186">WuDaoCorpora（研究）</text>
+                        <text x="494" y="204">The Pile · Bibliotik 子集</text>
+                        <text x="494" y="234" font-weight="600">商业使用</text>
+                        <text x="494" y="254" fill="#b91c1c">严格禁止</text>
+                    </g>
+                    <text x="20" y="296" font-size="12.5" fill="#64748b">整体许可证只是第一层；子集（如 The Pile 的 Bibliotik）可能单独受限，需逐一核查。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 6-1</span>三栏即为 6.1 节的红黄绿分级：绿灯可自由商用，黄灯需履行署名等义务，红灯子集严格禁止商用。分级是合规的“第一层”过滤，还需下钻到数据集内部子集。</figcaption>
+        </figure>
 
         <p>但这只是"第一层"检查——数据集整体许可证只是表面。真正复杂的是<strong>数据集内部的子集许可证</strong>。以 The Pile 为例，虽然它整体采用 MIT 许可证发布，但其中多个子集（Bibliotik 书籍、ArXiv 论文等）有各自独立的版权主体和许可条款。</p>
 
@@ -285,7 +340,7 @@
             <a href="index.html">📖 返回目录</a>
             <a href="07.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
