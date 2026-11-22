@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第5章 Common Crawl：预训练的石油矿藏</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第5章 · Common Crawl：预训练的石油矿藏</h1>
+            <p class="dek">WARC / WET / WAT 三种格式的取舍，以及 FineWeb 如何把一批约 100TB 的原始网页逐步筛到 5–7TB——近 95% 的缩减到底删掉了什么。</p>
+        </header>
         <h2>开篇：互联网的"数字化石"</h2>
 
         <p>大家好，我是你们的讲师。如果把大模型预训练比作炼油工业，那么 <strong>Common Crawl 就是我们这个时代的"石油矿藏"</strong>。</p>
@@ -218,6 +224,46 @@
       ▼
   最终高质量输出（5-7TB）</code></pre>
 
+        <figure>
+            <svg role="img" aria-labelledby="fig-fw-title fig-fw-desc" viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-fw-title">FineWeb 清洗流水线的逐级数据量</title>
+                <desc id="fig-fw-desc">水平条形图显示六个阶段后剩余的近似数据量（TB）：原始 100，语言过滤 60，URL 过滤 50，精确去重 35，模糊去重 20，启发式过滤 12，分类器评分 7。</desc>
+                <rect width="720" height="330" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="20" y="28" font-size="15" fill="#4c1d95">一批 CC 数据经过 FineWeb 管线后的剩余量（TB，近似）</text>
+                    <g font-size="13" fill="#334155" text-anchor="end">
+                        <text x="160" y="66">原始 WET</text>
+                        <text x="160" y="101">1 · 语言过滤</text>
+                        <text x="160" y="136">2 · URL 过滤</text>
+                        <text x="160" y="171">3 · 精确去重</text>
+                        <text x="160" y="206">4 · 模糊去重</text>
+                        <text x="160" y="241">5 · 启发式过滤</text>
+                        <text x="160" y="276">6 · 分类器评分</text>
+                    </g>
+                    <g fill="#8b5cf6">
+                        <rect x="170" y="52" width="520" height="20" rx="4"/>
+                        <rect x="170" y="87" width="312" height="20" rx="4" fill="#7c5cd6"/>
+                        <rect x="170" y="122" width="260" height="20" rx="4" fill="#6f4fd0"/>
+                        <rect x="170" y="157" width="182" height="20" rx="4" fill="#6242c9"/>
+                        <rect x="170" y="192" width="104" height="20" rx="4" fill="#5635c2"/>
+                        <rect x="170" y="227" width="62" height="20" rx="4" fill="#4a29bb"/>
+                        <rect x="170" y="262" width="36" height="20" rx="4" fill="#3f1db4"/>
+                    </g>
+                    <g font-size="12.5" fill="#4c1d95" font-weight="600">
+                        <text x="700" y="67" text-anchor="end">100</text>
+                        <text x="492" y="102">60</text>
+                        <text x="440" y="137">50</text>
+                        <text x="362" y="172">35</text>
+                        <text x="284" y="207">20</text>
+                        <text x="242" y="242">12</text>
+                        <text x="216" y="277">7</text>
+                    </g>
+                    <text x="20" y="312" font-size="12.5" fill="#64748b">每级数值取自 5.4 节管线图，为单批次近似量，非精确统计。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 5-1</span>把 5.4 节的管线文字转成条形长度：数据量在各阶段单调递减，前三级（语言 / URL / 精确去重）就削去了约六成，最终只剩约 7TB。数值为原文给出的单批次近似值。</figcaption>
+        </figure>
+
         <p>注意看这个缩减曲线：从 100TB 到 7TB，缩减了 <strong>93%</strong>。这意味着每 15 个 CC 页面中只有 1 个最终进入了训练集。这不是因为 FineWeb 太"挑剔"——而是因为互联网上的大部分页面确实不适合作为训练数据。</p>
 
         <div class="tip">
@@ -269,7 +315,7 @@
             <a href="index.html">📖 返回目录</a>
             <a href="06.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
