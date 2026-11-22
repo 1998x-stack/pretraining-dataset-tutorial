@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第2章 全球通用基座数据集全景</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第2章 · 全球通用基座数据集全景</h1>
+            <p class="dek">从 RedPajama、SlimPajama、Dolma 到 The Pile、RefinedWeb 与 C4：主流开源基座语料的定位、规模与许可证差异，以及如何按预算选型。</p>
+        </header>
         <h2>开篇：数据市场的"超市货架"</h2>
 
         <p>大家好，我是你们的讲师。上一章我们讨论了一个核心理念：<strong>数据质量决定模型能力的上限</strong>。那么，当我们要开始训练一个大模型时，第一个实际问题就摆在了面前：<strong>数据从哪里来？</strong></p>
@@ -111,6 +117,42 @@
                 </tr>
             </tbody>
         </table>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-rp-title fig-rp-desc" viewBox="0 0 720 235" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-rp-title">RedPajama-Data-1T 的来源构成</title>
+                <desc id="fig-rp-desc">水平堆叠条形图，按占比展开七个来源：CommonCrawl 67%，C4 15%，GitHub / Wikipedia / Books 各 4.5%，ArXiv 2.5%，StackExchange 2.0%。</desc>
+                <rect width="720" height="235" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="20" y="28" font-size="15" fill="#4c1d95">RedPajama-Data-1T 来源占比（共 ~1.2T tokens）</text>
+                    <g stroke="#ffffff" stroke-width="2">
+                        <rect x="20" y="44" width="455.6" height="58" fill="#8b5cf6"/>
+                        <rect x="475.6" y="44" width="102" height="58" fill="#a78bfa"/>
+                        <rect x="577.6" y="44" width="30.6" height="58" fill="#6d28d9"/>
+                        <rect x="608.2" y="44" width="30.6" height="58" fill="#34d399"/>
+                        <rect x="638.8" y="44" width="30.6" height="58" fill="#fbbf24"/>
+                        <rect x="669.4" y="44" width="17" height="58" fill="#f87171"/>
+                        <rect x="686.4" y="44" width="13.6" height="58" fill="#60a5fa"/>
+                    </g>
+                    <text x="247" y="79" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">CommonCrawl 67%</text>
+                    <text x="526" y="79" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">C4 15%</text>
+                    <g font-size="13.5" fill="#334155">
+                        <text x="20" y="133">■ 67% CommonCrawl</text>
+                        <text x="200" y="133">■ 15% C4</text>
+                        <text x="330" y="133">■ 4.5% GitHub</text>
+                        <text x="470" y="133">■ 4.5% Wikipedia</text>
+                        <text x="20" y="165">■ 4.5% Books</text>
+                        <text x="200" y="165">■ 2.5% ArXiv</text>
+                        <text x="330" y="165">■ 2.0% StackExchange</text>
+                    </g>
+                    <g font-size="12.5" fill="#64748b">
+                        <text x="20" y="200">占比按 2.1 节数据源表填写；条形宽度按占比线性缩放。</text>
+                        <text x="20" y="220">网页类（CommonCrawl + C4）合计约 82%，代码/书籍/学术为长尾补充。</text>
+                    </g>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 2-1</span>把 2.1 节的来源表换算成几何长度：RedPajama 的绝对主体仍是经清洗的网页（CommonCrawl 67% + C4 15%），GitHub、Wikipedia、Books 各占 4.5%，ArXiv 与 StackExchange 为长尾。数据源与占比数值出自 RedPajama 项目公开的配方说明。</figcaption>
+        </figure>
 
         <p>这个数据集的最大贡献在于：<strong>它打破了"大公司专属"的数据配方壁垒</strong>。在 RedPajama 出现之前，只有 Google、Meta、OpenAI 这样的公司才知道它们的模型具体用了什么数据。RedPajama 让学术界和小团队也能用上接近工业级水准的预训练数据。</p>
 
@@ -383,7 +425,7 @@
             <a href="index.html">📖 返回目录</a>
             <a href="03.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
