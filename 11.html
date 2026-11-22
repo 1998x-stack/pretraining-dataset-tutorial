@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第11章 模糊去重：MinHash与LSH原理</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第11章 · 模糊去重：MinHash 与 LSH 原理</h1>
+            <p class="dek">如何用一组紧凑的签名估计 Jaccard 相似度，再用 banding 把 O(N²) 的两两比对降到近似线性：阈值、假阳性与中文场景调参。</p>
+        </header>
         <h2>"差不多"的重复也是重复</h2>
 
         <p>大家好，我是你们的讲师。上一章我们解决了"完全一样"的问题，但现实世界中更常见的是"差不多一样"——同一篇新闻被不同媒体改写，同一段维基百科解说被不同的博客以略有不同的措辞引用，同一个 GitHub README 被翻译成不同的语言版本。</p>
@@ -63,6 +69,20 @@
   文档 A: {"我今天", "今天学", "天学习", "学习了"}
   文档 B: {"我今天", "今天学", "天学习", "学习Py", "Python"}
   J(A, B) = 3 / (4 + 2) = 3/6 = 0.5</code></pre>
+
+        <div class="math-equation" role="group" aria-label="Jaccard 相似度定义">
+            <div class="math-scroll" data-math-scroll tabindex="0" role="region" aria-label="Jaccard 相似度公式，可横向滚动">
+                <math display="block" aria-label="J(A,B) 等于 A 交 B 的基数除以 A 并 B 的基数">
+                    <mrow>
+                        <mi>J</mi><mo>(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo>)</mo><mo>=</mo>
+                        <mfrac>
+                            <mrow><mo>|</mo><mi>A</mi><mo>∩</mo><mi>B</mi><mo>|</mo></mrow>
+                            <mrow><mo>|</mo><mi>A</mi><mo>∪</mo><mi>B</mi><mo>|</mo></mrow>
+                        </mfrac>
+                    </mrow>
+                </math>
+            </div>
+        </div>
 
         <p>MinHash 的巧妙之处在于：如果你对每个 n-gram 集合应用一个随机哈希函数，并取集合中<strong>最小的哈希值</strong>作为签名，那么两个文档的签名相等的概率恰好等于它们的 Jaccard 相似度。</p>
 
@@ -108,6 +128,20 @@ def estimate_jaccard(sig_a: list, sig_b: list) -> float:
 
 其中 J 是 Jaccard 相似度，b 是 band 数，r 是每个 band 的行数。</code></pre>
 
+        <div class="math-equation" role="group" aria-label="LSH banding 的碰撞概率">
+            <div class="math-scroll" data-math-scroll tabindex="0" role="region" aria-label="LSH 碰撞概率公式，可横向滚动">
+                <math display="block" aria-label="P 等于 1 减去 (1 减 J 的 r 次方) 的 b 次方">
+                    <mrow>
+                        <mi>P</mi><mo>=</mo><mn>1</mn><mo>−</mo>
+                        <msup>
+                            <mrow><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>J</mi><mi>r</mi></msup><mo>)</mo></mrow>
+                            <mi>b</mi>
+                        </msup>
+                    </mrow>
+                </math>
+            </div>
+        </div>
+
         <p>通过调节 b 和 r，你可以控制相似度阈值。例如，如果你希望找到 Jaccard > 0.8 的相似文档对，可以设置 b = 20, r = 5，这样相似度 < 0.5 的文档几乎不会被选为候选，而相似度 > 0.8 的文档有很大概率被检测到。</p>
 
         <table>
@@ -151,6 +185,48 @@ def estimate_jaccard(sig_a: list, sig_b: list) -> float:
                 </tr>
             </tbody>
         </table>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-lsh-title fig-lsh-desc" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-lsh-title">LSH banding：签名分桶与候选对判定</title>
+                <desc id="fig-lsh-desc">两份文档的 MinHash 签名按 band 分组；band 1 中两列取值相同，落入同一个桶，因此 A 与 B 被判为候选相似对；band 2、band 3 取值不同，不产生碰撞。</desc>
+                <rect width="720" height="300" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="20" y="26" font-size="15" fill="#4c1d95">MinHash 签名按 band 分组（每 band 含 r 行）</text>
+                    <text x="138" y="50" text-anchor="middle" font-size="14" font-weight="600" fill="#5b21b6">文档 A</text>
+                    <text x="208" y="50" text-anchor="middle" font-size="14" font-weight="600" fill="#5b21b6">文档 B</text>
+                    <g stroke="#c4b5fd">
+                        <rect x="112" y="58" width="52" height="20" fill="#86efac"/>
+                        <rect x="112" y="78" width="52" height="20" fill="#86efac"/>
+                        <rect x="182" y="58" width="52" height="20" fill="#86efac"/>
+                        <rect x="182" y="78" width="52" height="20" fill="#86efac"/>
+                        <rect x="112" y="98" width="52" height="40" fill="#f1f5f9"/>
+                        <rect x="182" y="98" width="52" height="40" fill="#f1f5f9"/>
+                        <rect x="112" y="138" width="52" height="40" fill="#f1f5f9"/>
+                        <rect x="182" y="138" width="52" height="40" fill="#f1f5f9"/>
+                    </g>
+                    <g font-size="13" fill="#334155" text-anchor="end">
+                        <text x="100" y="84">band 1</text>
+                        <text x="100" y="124">band 2</text>
+                        <text x="100" y="164">band 3</text>
+                    </g>
+                    <text x="252" y="84" font-size="12" fill="#166534">✓ 取值相同</text>
+                    <path d="M242 78 H360" stroke="#7c3aed" stroke-width="3" fill="none"/>
+                    <polygon points="360,72 374,78 360,84" fill="#7c3aed"/>
+                    <rect x="378" y="46" width="316" height="64" rx="12" fill="#ede9fe" stroke="#c4b5fd"/>
+                    <g font-size="13.5" fill="#4c1d95">
+                        <text x="394" y="72" font-weight="600">band 1 合并哈希 → 桶 #42</text>
+                        <text x="394" y="94">A 与 B 落入同一桶 ⇒ 候选相似对，进入精确比对</text>
+                    </g>
+                    <g font-size="12.5" fill="#64748b">
+                        <text x="20" y="216">任一 band 碰撞即命为候选对；碰撞概率 P = 1 − (1 − J^r)^b。</text>
+                        <text x="20" y="240">增大 b（更多 band）降低 50% 阈值，增大 r（更长 band）降低假阳性。</text>
+                        <text x="20" y="264">图中取值为示意，用来说明“同桶即候选”的判定逻辑。</text>
+                    </g>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 11-1</span>banding 的核心不是比较完整签名，而是逐 band 哈希分桶：只有当某个 band 的 r 个值完全一致时两篇文档才落入同一桶。band 1 相同即成为候选对，band 2/3 不同则不产生碰撞，对应 11.2 节的 P 公式。</figcaption>
+        </figure>
 
         <div class="tip">
             <strong>参数选择的经验法则：</strong>在预训练数据去重中，通常将阈值设置在 0.7-0.85 之间。设得太低（比如 0.5）会导致大量"只是主题相关但内容不同"的文档被误判为重复；设得太高（比如 0.95）又会漏掉很多经过轻度重写的相似文档。FineWeb 使用的阈值为 0.87（b=14, r=13），Gopher 使用了 0.8（b=450, r=4，但总签名数更多）。
@@ -301,7 +377,7 @@ for stats in dedup.stats():
             <a href="index.html">📖 返回目录</a>
             <a href="12.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
