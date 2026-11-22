@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第17章 基准污染检测与去除</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第17章 · 基准污染检测与去除</h1>
+            <p class="dek">你的模型是真变聪明了，还是在“背答案”？从 Bloom Filter 的 n-gram 扫描、Suffix Array 精确匹配到 GPT-3 的 8-gram 阈值，以及删除与报告的取舍。</p>
+        </header>
         <h2>开篇：你的模型是真的变聪明了，还是只是在"背答案"？</h2>
 
         <p>大家好，我是你们的讲师。在 2023 年到 2025 年之间，开源大模型社区出现了一个非常有意思的现象：每当一个新模型发布，开发者们就会像侦探一样，在训练数据中"翻找" benchmark 的测试样本。Phi-3 被发现在训练数据中包含了 GSM8K 的测试集，Qwen2 被指出在 HumanEval 上表现优异可能是"数据泄露"的结果，甚至 GPT-4 的技术报告也不得不用专门的章节来解释他们的去污染措施。</p>
@@ -275,6 +281,45 @@ def find_contaminated_spans(
             </tbody>
         </table>
 
+        <figure>
+            <svg role="img" aria-labelledby="fig-cont-title fig-cont-desc" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-cont-title">不同 benchmark 类型的推荐 n-gram 阈值区间</title>
+                <desc id="fig-cont-desc">横轴为 n-gram 长度（4 到 14），五类 benchmark 的推荐阈值区间：自然语言问答 8–10，数学推理 5–8，代码生成 10–13，翻译 8–10，对话 8–12。</desc>
+                <rect width="720" height="300" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="20" y="26" font-size="15" fill="#4c1d95">推荐 n-gram 阈值区间（来自 17.4 节表）</text>
+                    <line x1="180" y1="240" x2="660" y2="240" stroke="#cbd5e1" stroke-width="2"/>
+                    <g font-size="13" fill="#334155" text-anchor="end">
+                        <text x="170" y="78">自然语言问答</text>
+                        <text x="170" y="118">数学推理</text>
+                        <text x="170" y="158">代码生成</text>
+                        <text x="170" y="198">翻译</text>
+                        <text x="170" y="238">对话</text>
+                    </g>
+                    <g stroke="#8b5cf6" stroke-width="16" stroke-linecap="round">
+                        <line x1="372" y1="74" x2="468" y2="74"/>
+                        <line x1="228" y1="114" x2="372" y2="114" stroke="#f59e0b"/>
+                        <line x1="468" y1="154" x2="612" y2="154" stroke="#0ea5e9"/>
+                        <line x1="372" y1="194" x2="468" y2="194" stroke="#10b981"/>
+                        <line x1="372" y1="234" x2="564" y2="234" stroke="#ec4899"/>
+                    </g>
+                    <g font-size="12" fill="#4c1d95">
+                        <text x="420" y="62" text-anchor="middle">8–10</text>
+                        <text x="300" y="102" text-anchor="middle">5–8</text>
+                        <text x="540" y="142" text-anchor="middle">10–13</text>
+                        <text x="420" y="182" text-anchor="middle">8–10</text>
+                        <text x="468" y="222" text-anchor="middle">8–12</text>
+                    </g>
+                    <g font-size="12" fill="#64748b" text-anchor="middle">
+                        <text x="180" y="262">4</text><text x="276" y="262">6</text><text x="372" y="262">8</text>
+                        <text x="468" y="262">10</text><text x="564" y="262">12</text><text x="660" y="262">14</text>
+                    </g>
+                    <text x="20" y="288" font-size="12.5" fill="#64748b">区间越短（如数学 5–8）越易检出模板化污染，越长（如代码 10–13）越能避开短片段偶然重叠。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 17-1</span>把 17.4 节的阈值表画成区间条：数学推理类容忍更短的匹配（5–8），代码生成类要求更长（10–13）。基线是 GPT-3 论文提出的 8-token 判据，各区间为经验推荐而非硬性标准。</figcaption>
+        </figure>
+
         <div class="warning">
             <strong>一个隐蔽的问题：</strong>仅仅依赖 n-gram 匹配会漏掉一种重要的污染形式——<strong>语义污染</strong>。模型可能没有"背诵" benchmark 题目的原文字符串，但训练数据中包含了大量与 benchmark 问题"同义但不同表述"的内容（比如 benchmark 的 train set、few-shot 示例、或者社区的解题讨论）。这种"软污染"比硬匹配更难检测，也更有争议。目前业界对如何处理语义污染还没有共识。
         </div>
@@ -442,7 +487,7 @@ executor.run()</code></pre>
             <a href="index.html">📖 返回目录</a>
             <a href="18.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
