@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第13章 基于模型的质量评分体系</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第13章 · 基于模型的质量评分体系</h1>
+            <p class="dek">“干净”不等于“好”：从 FineWeb-Edu 的教育价值分类器、DCLM 的 fastText 方案到困惑度与 LLM-as-Judge，以及 0–5 评分阈值与领域自适应取舍。</p>
+        </header>
         <h2>给每篇文档打个分：从启发式到模型驱动</h2>
 
         <p>大家好，我是你们的讲师。走到这一步，数据已经经过了语言筛选、启发式清洗、多重去重——应该是"干净"了吧？但"干净"不等于"好"。你可能还有大量内容空洞的文章：流水账式的日记、毫无营养的营销软文、AI 自动生成的低质内容。这些文档通过了所有启发式规则，但它们对模型能力的提升贡献接近于零。</p>
@@ -220,6 +226,36 @@ def ppl_based_filter(doc: dict) -> bool:
 
         <p>对于 FineWeb-Edu 的 0-5 评分，阈值选在 3.0 是最常见的——保留评分 3+ 的文档。这个选择并非随意：消融实验表明，低于 3 分的文档对模型在 benchmark 上的表现贡献很小甚至为负。</p>
 
+        <figure>
+            <svg role="img" aria-labelledby="fig-qual-title fig-qual-desc" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-qual-title">0–5 教育价值评分与 3.0 阈值的取舍</title>
+                <desc id="fig-qual-desc">横轴为 FineWeb-Edu 的 0 到 5 评分，纵轴为文档数量。阈值 3.0 左侧（评分 0–2）被丢弃，右侧（评分 3–5）被保留。</desc>
+                <rect width="720" height="300" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="20" y="26" font-size="15" fill="#4c1d95">按教育价值评分分层：阈值 3.0 以下丢弃，以上保留</text>
+                    <line x1="70" y1="230" x2="690" y2="230" stroke="#cbd5e1" stroke-width="2"/>
+                    <g>
+                        <rect x="90" y="206" width="70" height="24" fill="#cbd5e1"/>
+                        <rect x="180" y="182" width="70" height="48" fill="#cbd5e1"/>
+                        <rect x="270" y="158" width="70" height="72" fill="#cbd5e1"/>
+                        <rect x="360" y="122" width="70" height="108" fill="#a7d4a0"/>
+                        <rect x="450" y="98" width="70" height="132" fill="#86efac"/>
+                        <rect x="540" y="158" width="70" height="72" fill="#86efac"/>
+                    </g>
+                    <line x1="357" y1="70" x2="357" y2="238" stroke="#dc2626" stroke-width="3" stroke-dasharray="8 5"/>
+                    <text x="357" y="60" text-anchor="middle" font-size="13.5" font-weight="700" fill="#dc2626">阈值 3.0</text>
+                    <text x="215" y="262" text-anchor="middle" font-size="13" fill="#64748b">丢弃（评分 0–2）</text>
+                    <text x="505" y="262" text-anchor="middle" font-size="13" fill="#15803d">保留（评分 3–5）</text>
+                    <g font-size="13" fill="#334155" text-anchor="middle">
+                        <text x="125" y="248">0</text><text x="215" y="248">1</text><text x="305" y="248">2</text>
+                        <text x="395" y="248">3</text><text x="485" y="248">4</text><text x="575" y="248">5</text>
+                    </g>
+                    <text x="20" y="288" font-size="12.5" fill="#64748b">柱高为示意分布，非某个数据集的实测直方图；阈值 3.0 与“仅 3 分以上有正向贡献”的结论见 13.1 / 13.5 节。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 13-1</span>质量评分的本质是把连续评分变成一个保留/丢弃的切分：竖线是 3.0 阈值，左侧灰柱丢弃、右侧绿柱保留。柱高为示意，用来说明阈值位置而非真实分布。</figcaption>
+        </figure>
+
         <p>但固定阈值的局限性也很明显：不同领域的文档质量分布不同。一篇数学论文可能因为术语密集而被评分较低，但它的教育价值实际上很高。因此，更先进的方案是<strong>领域自适应的阈值</strong>——按分类（如科技、新闻、文学、学术）分别设定阈值，或者设定每个域保留前百分之多少的文档（如保留每个域的前 30%）。</p>
 
         <pre><code>def adaptive_threshold_filter(documents: list, keep_ratio: float = 0.3):
@@ -257,7 +293,7 @@ def ppl_based_filter(doc: dict) -> bool:
             <a href="index.html">📖 返回目录</a>
             <a href="14.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
