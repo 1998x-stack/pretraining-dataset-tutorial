@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第19章 合成数据生成与增强</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第19章 · 合成数据生成与增强</h1>
+            <p class="dek">当互联网不再够用，我们开始自己造数据：FinePhrase 结构化改写、知识图谱引导生成、LLM 改写信号放大，以及 Model Collapse 风险下的合成-天然混合比例。</p>
+        </header>
         <h2>开篇：当互联网不再够用，我们开始自己造数据</h2>
 
         <p>大家好，我是你们的讲师。今天我们要讨论一个有点"拧巴"的话题——<strong>合成数据</strong>。你可能会有疑问：前几章我们一直在讲如何清洗、过滤、去重，目的就是把"人造"的数据搞干净。现在怎么反过来要教大家用模型生成数据？这不是自己给自己挖坑吗？</p>
@@ -229,6 +235,38 @@ GPT-4o的推理速度在标准设置下约为每秒45个token，
             </tbody>
         </table>
 
+        <figure>
+            <svg role="img" aria-labelledby="fig-syn-title fig-syn-desc" viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-syn-title">合成数据占比与 Model Collapse 风险</title>
+                <desc id="fig-syn-desc">一条从安全到崩塌的风险带，随着合成数据占比从 1:9 增至纯合成 1:0，Model Collapse 风险由极低升至必然发生；合成与天然 1:3 为推荐比例。</desc>
+                <defs>
+                    <linearGradient id="riskGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0" stop-color="#34d399"/><stop offset="0.5" stop-color="#fbbf24"/><stop offset="1" stop-color="#ef4444"/>
+                    </linearGradient>
+                </defs>
+                <rect width="720" height="260" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">合成 : 天然 混合比例 —— 从左到右风险递增</text>
+                    <rect x="50" y="100" width="620" height="40" rx="12" fill="url(#riskGrad)"/>
+                    <g stroke="#1e293b" stroke-width="2">
+                        <line x1="112" y1="92" x2="112" y2="148"/><line x1="205" y1="92" x2="205" y2="148"/>
+                        <line x1="360" y1="92" x2="360" y2="148"/><line x1="515" y1="92" x2="515" y2="148"/><line x1="668" y1="92" x2="668" y2="148"/>
+                    </g>
+                    <text x="50" y="84" font-size="12" fill="#0f766e">安全</text>
+                    <text x="640" y="84" font-size="12" fill="#b91c1c">崩塌</text>
+                    <g font-size="12" fill="#334155" text-anchor="middle">
+                        <text x="112" y="172">1:9</text><text x="112" y="190" font-size="10" fill="#64748b">轻度增强</text>
+                        <text x="205" y="172">1:3</text><text x="205" y="190" font-size="10" fill="#0f766e">推荐</text>
+                        <text x="360" y="172">1:1</text><text x="360" y="190" font-size="10" fill="#64748b">收益见顶</text>
+                        <text x="515" y="172">3:1</text><text x="515" y="190" font-size="10" fill="#b45309">高风险</text>
+                        <text x="650" y="172">1:0</text><text x="650" y="190" font-size="10" fill="#b91c1c">纯合成</text>
+                    </g>
+                    <text x="24" y="232" font-size="12" fill="#64748b">比例与风险评级取自本节 19.4 表格；安全边界：合成占比不超过 1/3。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 19-1</span>合成与天然数据的混合比例谱：从 <strong>1:9</strong>（轻度增强）向右风险逐级升高，<strong>1:3</strong> 为经过大规模验证的推荐比例，<strong>纯合成</strong>则必然导致不可逆坍缩。风险评级与比例取自本节 19.4 的共识表。</figcaption>
+        </figure>
+
         <div class="warning">
             <strong>红线警告：</strong>切勿在没有任何天然数据的情况下完全依赖合成数据。比例不超过 1/3（即合成:天然 = 1:2）是目前经过大规模验证的安全边界。如果合成数据比例超过 50%，请确保每次训练迭代都混入新的天然数据来"刷新"分布。
         </div>
@@ -308,7 +346,7 @@ def diversity_metrics(texts):
             <a href="index.html">📖 返回目录</a>
             <a href="20.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
