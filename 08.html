@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第8章 数据采集与原始格式解析</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第8章 · 数据采集与原始格式解析</h1>
+            <p class="dek">从原始字节到干净文本的“第一公里”：WARC 格式逐字段拆解、warcio 与 Trafilatura 的正文抽取、GitHub 代码与 PDF 解析，以及编码陷阱与并行下载。</p>
+        </header>
         <h2>从原始字节到干净文本：数据采集的"第一公里"</h2>
 
         <p>大家好，我是你们的讲师。前几章我们聊了数据配比、Common Crawl 的潜力、许可证合规这些宏观问题——现在是时候把手弄脏了。从这一章开始，我们将进入预训练数据处理流水线的 <strong>第一公里</strong>：数据采集与原始格式解析。</p>
@@ -56,6 +62,31 @@
         <p>WARC（Web ARChive）是互联网存档的标准格式，也是 Common Crawl 和 Internet Archive 等大规模网络语料的基础容器格式。要玩转 Common Crawl 的数据，必须先理解 WARC。</p>
 
         <p>一个 WARC 文件由多条 WARC 记录组成，每条记录包含三个部分：<strong>WARC 头部</strong>、<strong>内容块</strong>和<strong>尾部换行</strong>。WARC 头部是一组键值对，描述了这条记录的元信息和内容位置。常见头部字段包括：</p>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-warc-title fig-warc-desc" viewBox="0 0 720 290" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-warc-title">WARC 文件与单条记录的内部结构</title>
+                <desc id="fig-warc-desc">一个 WARC 文件由多条 WARC 记录拼接而成；每条记录又依次由 WARC 头部、内容块和尾部换行三部分组成。</desc>
+                <rect width="720" height="290" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">一个 WARC 文件 = 多条记录拼接</text>
+                    <g font-size="13" fill="#1e293b">
+                        <rect x="30" y="56" width="240" height="56" rx="10" fill="#ede9fe" stroke="#c4b5fd"/><text x="44" y="90">WARC 记录 #1</text>
+                        <rect x="30" y="122" width="240" height="56" rx="10" fill="#ede9fe" stroke="#c4b5fd"/><text x="44" y="156">WARC 记录 #2</text>
+                        <rect x="30" y="188" width="240" height="56" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/><text x="44" y="222">WARC 记录 #…</text>
+                    </g>
+                    <g stroke="#8b5cf6" stroke-width="2" fill="none"><path d="M276 142 h40"/></g>
+                    <path d="M318 142 l-8 -5 v10 z" fill="#8b5cf6"/>
+                    <text x="352" y="84" font-size="13" fill="#4c1d95">单条记录拆解</text>
+                    <g font-size="12" fill="#1e293b">
+                        <rect x="352" y="96" width="338" height="46" rx="8" fill="#e0f2fe" stroke="#a7d4ef"/><text x="366" y="124">WARC 头部（键值对：URI、长度、类型等）</text>
+                        <rect x="352" y="150" width="338" height="46" rx="8" fill="#fef9c3" stroke="#facc15"/><text x="366" y="178">内容块（HTTP 响应 / 原始字节）</text>
+                        <rect x="352" y="204" width="338" height="34" rx="8" fill="#d1fae5" stroke="#8fd8b8"/><text x="366" y="226">尾部换行（记录分隔）</text>
+                    </g>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 8-1</span>WARC 容器结构：外层是多条记录的顺序拼接，内层单条记录依次为 <strong>WARC 头部</strong>、<strong>内容块</strong>与<strong>尾部换行</strong>三部分。结构描述依据本节 8.1 正文（WARC 为 Common Crawl、Internet Archive 的标准存档格式）。</figcaption>
+        </figure>
 
         <table>
             <thead>
@@ -343,7 +374,7 @@ with ProcessPoolExecutor(max_workers=8) as executor:
             <a href="index.html">📖 返回目录</a>
             <a href="09.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
