@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第10章 精确去重：剔除重复文本</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第10章 · 精确去重：剔除重复文本</h1>
+            <p class="dek">Web 数据的重复率远超想象：从 SHA256 文档级哈希、URL 规范化，到后缀数组子串去重与跨数据集去重，逐步拆解成本最低、效果最直接的去重第一道闸门。</p>
+        </header>
         <h2>同样的话，不要说两遍</h2>
 
         <p>大家好，我是你们的讲师。上一章我们通过语言识别和启发式过滤器筛选出了"看起来像样"的文本。现在的问题是：<strong>同一个内容出现在了多少个文档里？</strong></p>
@@ -89,6 +95,38 @@ def deduplicate_documents(documents: list) -> list:
             seen_hashes.add(h)
             unique_docs.append(doc)
     return unique_docs</code></pre>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-exact-title fig-exact-desc" viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-exact-title">文档级精确去重流水线</title>
+                <desc id="fig-exact-desc">原始文档依次经过格式归一化、SHA256 哈希与哈希集合查表；哈希首次出现的文档保留，重复哈希的文档丢弃。</desc>
+                <rect width="720" height="210" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">文档级精确去重流水线</text>
+                    <g font-size="13" fill="#1e293b" text-anchor="middle">
+                        <rect x="20" y="60" width="116" height="56" rx="10" fill="#ede9fe" stroke="#c4b5fd"/>
+                        <text x="78" y="86">原始文档</text><text x="78" y="104" font-size="11" fill="#64748b">未归一化</text>
+                        <rect x="161" y="60" width="116" height="56" rx="10" fill="#e0f2fe" stroke="#a7d4ef"/>
+                        <text x="219" y="86">格式归一化</text><text x="219" y="104" font-size="11" fill="#64748b">空白/大小写</text>
+                        <rect x="302" y="60" width="116" height="56" rx="10" fill="#fef9c3" stroke="#facc15"/>
+                        <text x="360" y="86">SHA-256</text><text x="360" y="104" font-size="11" fill="#64748b">哈希指纹</text>
+                        <rect x="443" y="60" width="116" height="56" rx="10" fill="#d1fae5" stroke="#8fd8b8"/>
+                        <text x="501" y="86">哈希集合查表</text><text x="501" y="104" font-size="11" fill="#64748b">seen set</text>
+                        <rect x="584" y="60" width="116" height="56" rx="10" fill="#fee2e2" stroke="#f3b5b5"/>
+                        <text x="642" y="86">保留/丢弃</text><text x="642" y="104" font-size="11" fill="#64748b">首个保留</text>
+                    </g>
+                    <g stroke="#8b5cf6" stroke-width="2" fill="none">
+                        <path d="M136 88 h22"/><path d="M277 88 h22"/><path d="M418 88 h22"/><path d="M559 88 h22"/>
+                    </g>
+                    <g fill="#8b5cf6">
+                        <path d="M158 88 l-7 -4 v8 z"/><path d="M299 88 l-7 -4 v8 z"/><path d="M440 88 l-7 -4 v8 z"/><path d="M581 88 l-7 -4 v8 z"/>
+                    </g>
+                    <text x="24" y="160" font-size="12" fill="#64748b">同一内容的不同排版经归一化后得到同一哈希，从而被合并。</text>
+                    <text x="24" y="182" font-size="12" fill="#64748b">教学示意；文中实测在 10TB 语料抽样 1 万文档时约 17% 存在完全副本（见本章开篇）。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 10-1</span>精确去重的四步流水线：<strong>归一化</strong>抹平格式差异，<strong>SHA-256</strong> 生成指纹，<strong>哈希集合</strong>查表，首见保留、重复丢弃。归一化过强会误杀不同内容，过弱会漏掉同一内容，故业界只做最小格式归一化（本节 10.1）。</figcaption>
+        </figure>
 
         <p>归一化的程度需要根据具体场景权衡。过度归一化（比如去掉所有标点符号）会导致不同内容被误判为相同；归一化不足（比如保留全角/半角差异）则会让同一内容的多个版本漏网。业界常用的做法是只做<strong>最小的格式归一化</strong>——换行符、空白、大小写，保留标点和结构。</p>
 
@@ -262,7 +300,7 @@ pipeline = [
             <a href="index.html">📖 返回目录</a>
             <a href="11.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
