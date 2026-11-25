@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第14章 有害内容过滤与安全审查</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第14章 · 有害内容过滤与安全审查</h1>
+            <p class="dek">安全是数据工程的强制性红线：从 NSFW 检测、毒性过滤到 PII 识别移除，再到五阶段安全管道，拆解如何在不牺牲数据多样性的前提下守住底线。</p>
+        </header>
         <h2>安全是数据工程的底线</h2>
 
         <p>大家好，我是你们的讲师。数据经过了质量评分，留下来的都是"高教育价值"的文档——但还有一个问题必须回答：<strong>这些数据安全吗？</strong></p>
@@ -309,6 +315,25 @@ trainer.train()</code></pre>
             </tbody>
         </table>
 
+        <figure>
+            <svg role="img" aria-labelledby="fig-safety-title fig-safety-desc" viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-safety-title">五阶段安全清洗管道</title>
+                <desc id="fig-safety-desc">从 L1 关键字黑名单到 L5 人工抽检，处理速度逐层下降、召回率逐层上升；前几层快速放行明显安全内容，后几层仔细审查边界案例。</desc>
+                <rect width="720" height="280" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">多阶段安全管道（速度降、召回升）</text>
+                    <g font-size="13" fill="#fff">
+                        <rect x="50" y="52" width="620" height="32" rx="8" fill="#8b5cf6"/><text x="62" y="73">L1 关键字/域名黑名单 · 每秒百万级 · 召回~40%</text>
+                        <rect x="50" y="94" width="520" height="32" rx="8" fill="#7c6cf0"/><text x="62" y="115">L2 轻量级分类器 · 每秒万级 · 召回~70%</text>
+                        <rect x="50" y="136" width="430" height="32" rx="8" fill="#5fa8d8"/><text x="62" y="157">L3 深度分类器 · 每秒千级 · 召回~90%</text>
+                        <rect x="50" y="178" width="340" height="32" rx="8" fill="#38b2a8"/><text x="62" y="199">L4 LLM 检查 · 每秒数十级 · 召回~98%</text>
+                        <rect x="50" y="220" width="260" height="32" rx="8" fill="#2f9e5f"/><text x="62" y="241">L5 人工抽检 · 最慢 · 召回最高</text>
+                    </g>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 14-1</span>五阶段安全管道的“漏斗”结构：条形越短代表处理速度越慢、保留的数据越少，而召回率逐层提高。<strong>各层速度与召回率取自本节 14.5 表格</strong>；条形长度为层次示意。</figcaption>
+        </figure>
+
         <p>策略是：<strong>前几层快速放行明显安全的内容，后几层仔细审查边界案例</strong>。L1 通过的直接放行，L1 标记为可疑的交给 L2，依此类推。这样既保证了整个管道的高吞吐，又确保了安全审查的可靠性。</p>
 
         <div class="highlight">
@@ -328,7 +353,7 @@ trainer.train()</code></pre>
             <a href="index.html">📖 返回目录</a>
             <a href="15.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
