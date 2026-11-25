@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第12章 语义级与句子级去重</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第12章 · 语义级与句子级去重</h1>
+            <p class="dek">比起重复文档，重复片段更隐蔽：从 C4 的句子 3-gram 去重、嵌入向量与 FAISS 语义去重，到多层级流水线与中文跨语言重复难题，逐层拆解。</p>
+        </header>
         <h2>比重复文档更隐蔽的：重复片段</h2>
 
         <p>大家好，我是你们的讲师。前两章我们解决了"整篇文档一样"和"大致一样"的问题。但有一种更隐蔽的重复，逃过了 MinHash 的法网——<strong>句子级和语义级的片段重复</strong>。</p>
@@ -248,7 +254,27 @@ def find_similar_with_faiss(
             </tbody>
         </table>
 
-        <p>每一层过滤后的输出作为下一层的输入。这样做的好处是：先用低成本的方法剔除大量明显的重复，减少进入高成本方法的的数据量。最终，从原始数据到完成全链路去重，通常能减少 <strong>40-60%</strong> 的数据量。</p>
+        <figure>
+            <svg role="img" aria-labelledby="fig-12-title fig-12-desc" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-12-title">多层级去重流水线</title>
+                <desc id="fig-12-desc">六层去重按计算成本从低到高依次为 URL 指纹、SHA256 文档哈希、后缀数组子串、MinHash+LSH、C4 句子 3-gram、嵌入向量语义去重，条形逐层变短表示数据量逐层缩减。</desc>
+                <rect width="720" height="300" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">多层级去重流水线（成本从低到高）</text>
+                    <g font-size="13" fill="#fff">
+                        <rect x="40" y="52" width="640" height="32" rx="8" fill="#8b5cf6"/><text x="52" y="73">L1 URL 指纹 · 完全相同 URL · ~5-10%</text>
+                        <rect x="40" y="92" width="600" height="32" rx="8" fill="#7c6cf0"/><text x="52" y="113">L2 SHA256 文档哈希 · 完全相同文档 · ~10-30%</text>
+                        <rect x="40" y="132" width="540" height="32" rx="8" fill="#5fa8d8"/><text x="52" y="153">L3 后缀数组子串 · 50+ token 精确子串 · ~5-15%</text>
+                        <rect x="40" y="172" width="470" height="32" rx="8" fill="#38b2a8"/><text x="52" y="193">L4 MinHash + LSH · 近似重复文档 · ~15-25%</text>
+                        <rect x="40" y="212" width="430" height="32" rx="8" fill="#2f9e5f"/><text x="52" y="233">L5 C4 句子 3-gram · 重复句子段落 · ~2-5%</text>
+                        <rect x="40" y="252" width="390" height="32" rx="8" fill="#d99a2b"/><text x="52" y="273">L6 嵌入向量语义去重 · 需 GPU · ~3-8%</text>
+                    </g>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 12-1</span>六级去重流水线按计算成本递进，条形变短表示上一层的输出作为下一层的输入、数据量逐层收缩。<strong>缩减率区间取自本节 12.4 表格</strong>，条形长度仅为层次示意；全链路累积通常减少 40-60% 数据量。</figcaption>
+        </figure>
+
+        <p>每一层过滤后的输出作为下一层的输入。这样做的好处是：先用低成本的方法剔除大量明显的重复，减少进入高成本方法的数据量。最终，从原始数据到完成全链路去重，通常能减少 <strong>40-60%</strong> 的数据量。</p>
 
         <div class="highlight">
             <strong>工程原则：</strong>每一层去重只做一件事，而且要把这件事做"干净"。不要在 MinHash 层试图做语义去重，也不要在句子级去重里尝试做文档去重。保持每层职责单一，这样当某层出现问题（比如误删）时，你可以快速定位并修复，而不影响其他层的逻辑。
@@ -277,7 +303,7 @@ def find_similar_with_faiss(
             <a href="index.html">📖 返回目录</a>
             <a href="13.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
