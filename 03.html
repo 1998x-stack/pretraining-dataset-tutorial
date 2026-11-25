@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第3章 中文预训练语料现状与挑战</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,13 +43,37 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第3章 · 中文预训练语料现状与挑战</h1>
+            <p class="dek">从 SkyPile-150B 到 WuDaoCorpora、CLUECorpus 与中文 Wikipedia：盘点可用的中文语料家底，并拆解稀缺、质量方差、版权与组织缺位四大结构性痛点。</p>
+        </header>
         <h2>开篇：中文大模型的"隐形天花板"</h2>
 
         <p>大家好，我是你们的讲师。上一章我们兴致勃勃地逛了全球数据集超市，但你可能已经注意到一个令人不安的事实——<strong>货架上的"优质中文语料"寥寥无几</strong>。</p>
 
         <p>这不是你的错觉。截至 2026 年，中文高质量公开预训练语料的稀缺性，已经成了制约中文大模型发展的核心瓶颈。我可以举一个具体的数字来说明问题的严重性：英文高质量公开数据集的总量（Dolma、RedPajama、The Pile 等合计）已经超过 5T token，而中文高质量公开语料加起来可能还不到 500B token。<strong>差了整整一个数量级</strong>。</p>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-zh-title fig-zh-desc" viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-zh-title">中英文高质量公开预训练语料量级对比</title>
+                <desc id="fig-zh-desc">英文高质量公开数据集合计超过 5 万亿 token，中文高质量公开语料合计不足 5000 亿 token，相差约一个数量级。</desc>
+                <rect width="720" height="260" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="24" y="40" font-size="15" fill="#4c1d95">高质量公开预训练语料（量级对比）</text>
+                    <text x="24" y="94" font-size="14" fill="#334155">英文</text>
+                    <rect x="90" y="72" width="560" height="34" rx="8" fill="#8b5cf6"/>
+                    <text x="662" y="94" font-size="13" fill="#5b21b6">&gt;5T</text>
+                    <text x="24" y="172" font-size="14" fill="#334155">中文</text>
+                    <rect x="90" y="150" width="56" height="34" rx="8" fill="#14b8a6"/>
+                    <text x="158" y="172" font-size="13" fill="#0f766e">&lt;0.5T</text>
+                    <text x="90" y="232" font-size="12" fill="#64748b">英文：Dolma / RedPajama-1T / The Pile 合计</text>
+                    <text x="410" y="248" font-size="12" fill="#64748b">中文：SkyPile / CLUECorpus / 中文 Wikipedia 合计</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 3-1</span>中英文高质量公开语料量级对照：英文合计超过 <strong>5T token</strong>，中文合计<strong>不足 0.5T token</strong>，相差约一个数量级。条形长度为量级示意，非精确统计；口径见本章 3.6 节与第 2 章数据集清单。</figcaption>
+        </figure>
 
         <p>为什么会这样？是中文互联网的数据不够多吗？恰恰相反——中文互联网的数据量极为庞大，但问题是：<strong>这些数据要么被锁在各大平台的围墙花园里，要么质量参差不齐到无法直接使用，要么面临复杂的版权和合规问题。</strong></p>
 
@@ -279,7 +305,7 @@
             <a href="index.html">📖 返回目录</a>
             <a href="04.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
