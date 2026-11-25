@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第7章 数据配比策略与混合哲学</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第7章 · 数据配比策略与混合哲学</h1>
+            <p class="dek">把网页、书籍、代码、对话按什么比例混在一起？从 70-15-10-5 经验法则、静态混合与课程学习对比，到代理模型调优，系统拆解数据配比这件事。</p>
+        </header>
         <h2>开篇：做一锅"恰到好处"的训练数据</h2>
 
         <p>大家好，我是你们的讲师。到目前为止，我们已经走访了全球的数据集超市（第 2 章），处理了中文数据的独家难题（第 3 章），搜集了垂直领域的高价值语料（第 4 章），见识了 Common Crawl 这座数据油田（第 5 章），并划好了数据合规的红线（第 6 章）。现在，我们面临一个"幸福的烦恼"：<strong>数据源太多了，该怎么把它们混在一起？</strong></p>
@@ -91,6 +97,32 @@
                 </tr>
             </tbody>
         </table>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-mix-title fig-mix-desc" viewBox="0 0 720 230" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-mix-title">70-15-10-5 数据配比</title>
+                <desc id="fig-mix-desc">一条百分之百的横条按 token 占比划分：网页数据 70%，书籍与 Wikipedia 15%，代码与学术论文 10%，其他对话指令 5%。</desc>
+                <rect width="720" height="230" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="24" y="38" font-size="15" fill="#4c1d95">70-15-10-5 经验配比（按 token）</text>
+                    <rect x="60" y="66" width="420" height="46" fill="#8b5cf6"/>
+                    <rect x="480" y="66" width="90" height="46" fill="#14b8a6"/>
+                    <rect x="570" y="66" width="60" height="46" fill="#f59e0b"/>
+                    <rect x="630" y="66" width="30" height="46" fill="#ec4899"/>
+                    <text x="270" y="95" text-anchor="middle" font-size="16" fill="#fff">70%</text>
+                    <text x="525" y="95" text-anchor="middle" font-size="14" fill="#fff">15%</text>
+                    <text x="600" y="95" text-anchor="middle" font-size="12" fill="#fff">10%</text>
+                    <text x="645" y="130" text-anchor="middle" font-size="12" fill="#be185d">5%</text>
+                    <g font-size="13" fill="#334155">
+                        <rect x="60" y="160" width="12" height="12" fill="#8b5cf6"/><text x="80" y="171">网页数据 · 常识与语言基础</text>
+                        <rect x="60" y="188" width="12" height="12" fill="#14b8a6"/><text x="80" y="199">书籍 + Wikipedia · 长篇结构化叙事</text>
+                        <rect x="380" y="160" width="12" height="12" fill="#f59e0b"/><text x="400" y="171">代码 + 学术论文 · 推理与逻辑</text>
+                        <rect x="380" y="188" width="12" height="12" fill="#ec4899"/><text x="400" y="199">其他（对话/指令）</text>
+                    </g>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 7-1</span>把 70-15-10-5 近似配比画成整体 100% 的一条 token 占比带：<strong>网页 70%</strong>、书籍与 Wikipedia <strong>15%</strong>、代码与学术论文 <strong>10%</strong>、对话与指令等 <strong>5%</strong>。比例取自本节 7.1 所述 LLaMA 论文披露类别合并后的近似值。</figcaption>
+        </figure>
 
         <p>这个比例不是凭空出现的——它<strong>大致反映了 LLaMA 系列和 GPT 系列模型论文中披露的数据配比</strong>。LLaMA 论文中提到，他们的训练数据中 Common Crawl 占 67%，C4 占 15%，Wikipedia 占 4.5%，GitHub 占 4.5%，Books 占 4.5%，ArXiv 占 2.5%，StackExchange 占 2.0%。把这些数字按照类别合并，你会发现非常接近 70-15-10-5 这个比例。</p>
 
@@ -306,7 +338,7 @@
             <a href="index.html">📖 返回目录</a>
             <a href="08.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
