@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第21章 课程学习与动态数据调度</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第21章 · 课程学习与动态数据调度</h1>
+            <p class="dek">数据的顺序是隐藏的第二道杠杆：为什么大规模预训练中静态混合常常胜过课程学习，何时课程学习真正有用，以及数据难度评分与动态领域加权的工程实践。</p>
+        </header>
         <h2>开篇：数据的顺序，是第二道隐藏的杠杆</h2>
 
         <p>大家好，我是你们的讲师。在开始本章之前，我想先聊一个反直觉的实验。2025 年，我的团队在训练一个 7B 模型时做了一组对照实验：两组用完全相同的数据（同样的配比、同样的清洗流程），唯一的不同是——A 组把数据按照"先简单后困难"的顺序排列（从维基百科开始，逐步过渡到学术论文和代码），B 组完全随机打乱。按照 Bengio 2009 年提出的<strong>课程学习 (Curriculum Learning)</strong> 理论，A 组应该会更好。但结果呢？两组在几乎所有 benchmark 上<strong>没有显著差异</strong>。更打脸的是，当我们把实验放大到 70B 模型时，随机打乱的 B 组反而略好一点点。</p>
@@ -115,6 +121,36 @@
                 </tr>
             </tbody>
         </table>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig-curr-title fig-curr-desc" viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig-curr-title">不同数据调度策略的最终困惑度 PPL</title>
+                <desc id="fig-curr-desc">对比五种数据调度策略在 7B 与 70B 规模上的最终困惑度，PPL 越低越好；静态 50-30-20 混合在两种规模上都最优，由难到易反课程最差。</desc>
+                <rect width="720" height="320" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui, 'PingFang SC', sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">五种数据调度策略的最终 PPL（越低越好）</text>
+                    <rect x="470" y="22" width="12" height="12" fill="#8b5cf6"/><text x="488" y="33" font-size="12" fill="#334155">7B</text>
+                    <rect x="530" y="22" width="12" height="12" fill="#14b8a6"/><text x="548" y="33" font-size="12" fill="#334155">70B</text>
+                    <line x1="50" y1="270" x2="700" y2="270" stroke="#cbd5e1"/>
+                    <g>
+                        <rect x="60" y="78" width="34" height="192" fill="#8b5cf6"/><rect x="100" y="222" width="34" height="48" fill="#14b8a6"/>
+                        <rect x="190" y="72" width="34" height="198" fill="#8b5cf6"/><rect x="230" y="216" width="34" height="54" fill="#14b8a6"/>
+                        <rect x="320" y="60" width="34" height="210" fill="#8b5cf6"/><rect x="360" y="204" width="34" height="66" fill="#14b8a6"/>
+                        <rect x="450" y="84" width="34" height="186" fill="#8b5cf6"/><rect x="490" y="228" width="34" height="42" fill="#14b8a6"/>
+                        <rect x="580" y="90" width="34" height="180" fill="#8b5cf6"/><rect x="620" y="234" width="34" height="36" fill="#14b8a6"/>
+                    </g>
+                    <g font-size="11" fill="#475569" text-anchor="middle">
+                        <text x="97" y="292">随机打乱</text><text x="227" y="292">由易到难</text><text x="357" y="292">由难到易</text><text x="487" y="292">静怷50-30-20</text><text x="617" y="292">动态加权</text>
+                    </g>
+                    <g font-size="10" fill="#1e293b" text-anchor="middle">
+                        <text x="77" y="74">10.2</text><text x="117" y="218">7.8</text><text x="207" y="68">10.3</text><text x="247" y="212">7.9</text>
+                        <text x="337" y="56">10.5</text><text x="377" y="200">8.1</text><text x="467" y="80">10.1</text><text x="507" y="224">7.7</text>
+                        <text x="597" y="86">10.0</text><text x="637" y="230">7.6</text>
+                    </g>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 21-1</span>五种数据调度策略在 7B 与 70B 上的最终困惑度对比：<strong>静态 50-30-20 混合在两种规模下均取得最低 PPL</strong>，反课程（由难到易）最差；数值取自本节 21.2 引用的 2026 年论文对比表。</figcaption>
+        </figure>
 
         <p>所谓的"50-30-20 静态混合"指的是：50% 通用网络文本 + 30% 高质量精选文 + 20% 代码/数学。每一批次（batch）都从这三个池子中按固定比例采样，然后在训练全程都保持这个比例。就这么简单——不需要课程、不需要排序、不需要动态调整。</p>
 
@@ -298,7 +334,7 @@ def check_data_exhaustion(data_plan, data_inventory):
             <a href="index.html">📖 返回目录</a>
             <a href="22.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
