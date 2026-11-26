@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第20章 多语言与低资源语料构建</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第20章 · 多语言与低资源语料构建</h1>
+            <p class="dek">互联网上的语言并不平等：从 mC4 的局限到 FineWeb-2 的多语言管道，看跨语言迁移、低资源构建策略、语言识别难点，以及多语言下的 Chinchilla 最低 Token 预算。</p>
+        </header>
         <h2>开篇：一个模型的母语决定了它的灵魂</h2>
 
         <p>大家好，我是你们的讲师。在开始本章之前，我想分享一个让我印象深刻的项目经历。2024 年底，我参与了一个面向<strong>东南亚市场</strong>的多语言大模型项目。我们的模型需要支持包括泰语、越南语、印尼语、高棉语（柬埔寨）、老挝语在内的 8 种语言。CEO 信心满满地说："我们用 GPT-4 的 Tokenizer 就好啦，都是 Unicode，没问题的。"结果模型训练出来后，泰语的生成质量惨不忍睹，越南语勉强及格，印尼语倒是不错。原因很简单：<strong>不是所有的语言在互联网上都是"平等的"</strong>。印尼语在 Common Crawl 中的占比大约是泰语的 4 倍、高棉语的 50 倍。模型在训练中"见"过多少某种语言的文本，直接决定了它在这种语言上的表现。这就是多语言预训练最残酷的现实——<strong>数据的不平等，决定了能力的不平等</strong>。</p>
@@ -99,6 +105,27 @@
         <div class="highlight">
             <strong>核心教训：</strong>多语言数据清洗不能"一锅煮"。每种语言都需要定制化的处理策略——从分词、语言检测阈值、质量过滤规则到去重算法。
         </div>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig20a-t fig20a-d" viewBox="0 0 720 218" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig20a-t">三种语言在 Common Crawl 中的相对占比</title>
+                <desc id="fig20a-d">以高棉语为基准 1，印尼语的网络文本量约为其 50 倍，泰语约为其 12.5 倍；语料量级的悬殊直接造成模型能力的不平等。</desc>
+                <rect width="720" height="218" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui,'PingFang SC',sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">Common Crawl 中的相对语料量（以高棉语 = 1 为基准）</text>
+                    <line x1="150" y1="60" x2="150" y2="176" stroke="#cbd5e1"/>
+                    <rect x="150" y="66" width="500" height="26" rx="6" fill="#7c3aed"/>
+                    <text x="658" y="84" font-size="12" fill="#4c1d95">≈ 50× · 印尼语</text>
+                    <rect x="150" y="104" width="125" height="26" rx="6" fill="#8b5cf6"/>
+                    <text x="283" y="122" font-size="12" fill="#5b21b6">≈ 12.5× · 泰语</text>
+                    <rect x="150" y="142" width="12" height="26" rx="4" fill="#c4b5fd"/>
+                    <text x="170" y="160" font-size="12" fill="#6d28d9">= 1× · 高棉语</text>
+                    <line x1="150" y1="180" x2="650" y2="180" stroke="#e2e8f0"/>
+                    <text x="24" y="204" font-size="11" fill="#64748b">倍数取自本章开篇陈述：印尼语约为泰语 4 倍、高棉语 50 倍；横向缩放为教学示意。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 20-1</span>同一种“互联网”里，不同语言的语料量差了几十倍：以高棉语为基准 1，泰语约为 12.5 倍、印尼语约为 50 倍。倍数取自本章开篇的陈述，横向长度为教学示意。这种量级差正是多语言模型中低资源语言“天生弱势”的根源。</figcaption>
+        </figure>
 
         <h2>20.2 FineWeb-2：新一代多语言数据管道</h2>
 
@@ -286,7 +313,7 @@ def normalize_script(text, target_lang="zh"):
             <a href="index.html">📖 返回目录</a>
             <a href="21.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
