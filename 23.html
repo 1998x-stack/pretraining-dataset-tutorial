@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第23章 Datatrove实战：从Common Crawl到清洗数据</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第23章 · Datatrove 实战：从 Common Crawl 到清洗数据</h1>
+            <p class="dek">把前面学的清洗理论串成一条能跑的管道：Datatrove 的 Reader/Block/Writer/Executor 四件套、WarcReader 到 MinHash 的常用 Block 组合、完整 Pipeline 实战，以及集群运行与监控。</p>
+        </header>
         <h2>开篇：从 WARC 到高质量文本，就差一个管道</h2>
 
         <p>大家好，我是你们的讲师。前面二十多章，我们把数据清洗的理论讲了个遍——去重算法、质量评分、安全过滤、污染检测……但有一个问题始终悬而未决：<strong>这些东西到底怎么串起来跑通？</strong></p>
@@ -92,6 +98,38 @@
         <div class="tip">
             <strong>内存管理提醒：</strong>Datatrove 的流式设计虽然省内存，但有一个前提——你使用的 Block 本身不会缓存大量数据。例如，MinHashDeduplicator 在构建签名索引时会占用一定内存，因此对于超大规模的去重任务，建议使用独立的签名存储后端（如 Redis）。
         </div>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig23a-t fig23a-d" viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig23a-t">Datatrove 管道的四个核心概念</title>
+                <desc id="fig23a-d">数据从 Reader 流入，依次经过多个 Block（过滤、抽取、语言识别、质量过滤、去重），最后由 Writer 写出；整个流程由 PipelineExecutor 在单机或 Slurm 上调度。</desc>
+                <rect width="720" height="250" rx="18" fill="#fbfaff"/>
+                <defs><marker id="ar23" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#8b5cf6"/></marker></defs>
+                <g font-family="system-ui,'PingFang SC',sans-serif" text-anchor="middle">
+                    <text x="360" y="30" font-size="15" fill="#4c1d95">Reader → Block… → Writer（Executor 在两侧调度）</text>
+                    <rect x="24" y="46" width="672" height="150" rx="14" fill="none" stroke="#c4b5fd" stroke-dasharray="6 5"/>
+                    <text x="120" y="66" font-size="11" fill="#7c3aed" text-anchor="start">PipelineExecutor（单机 / Slurm）调度整个管道</text>
+                    <g stroke="#8b5cf6" stroke-width="2" marker-end="url(#ar23)" fill="none">
+                        <line x1="126" y1="121" x2="146" y2="121"/><line x1="246" y1="121" x2="266" y2="121"/>
+                        <line x1="386" y1="121" x2="406" y2="121"/><line x1="526" y1="121" x2="546" y2="121"/>
+                    </g>
+                    <g font-size="12">
+                        <rect x="30" y="96" width="96" height="50" rx="10" fill="#ede9fe"/>
+                        <text x="78" y="126" fill="#4c1d95">Reader</text>
+                        <rect x="150" y="96" width="96" height="50" rx="10" fill="#e0f2fe"/>
+                        <text x="198" y="120" fill="#0c4a6e">Block</text><text x="198" y="136" font-size="10" fill="#64748b">过滤/抽取</text>
+                        <rect x="270" y="96" width="116" height="50" rx="10" fill="#e0f2fe"/>
+                        <text x="328" y="120" fill="#0c4a6e">Block</text><text x="328" y="136" font-size="10" fill="#64748b">语言/质量</text>
+                        <rect x="410" y="96" width="116" height="50" rx="10" fill="#e0f2fe"/>
+                        <text x="468" y="120" fill="#0c4a6e">Block</text><text x="468" y="136" font-size="10" fill="#64748b">MinHash 去重</text>
+                        <rect x="550" y="96" width="140" height="50" rx="10" fill="#fef3c7"/>
+                        <text x="620" y="126" fill="#78350f">Writer</text>
+                    </g>
+                    <text x="360" y="226" font-size="11" fill="#64748b">四个概念与作用取自 23.1 节表格；Block 示例选自 23.2 节常用组合。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 23-1</span>Datatrove 的“水管”结构：Reader 进水、若干 Block 逐级处理（抽取→语言→质量→去重）、Writer 出水，PipelineExecutor 负责把整条管道调度到单机或 Slurm 上。概念定义见 23.1 节，Block 组合见 23.2 节。</figcaption>
+        </figure>
 
         <h2>23.2 Pipeline Blocks 详解</h2>
 
@@ -347,7 +385,7 @@ executor.run()</code></pre>
             <a href="index.html">📖 返回目录</a>
             <a href="24.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
