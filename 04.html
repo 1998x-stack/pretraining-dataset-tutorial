@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第4章 垂直领域与增强语料</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第4章 · 垂直领域与增强语料</h1>
+            <p class="dek">通用语料决定模型下限，垂直语料决定模型上限：用 The Stack 的代码、OpenWebMath 与 ProofPile 的数学、arXiv 的论文、FLAN/UltraChat 的指令对话，把“够用就好”的配比艺术讲清楚。</p>
+        </header>
         <h2>开篇：通用语料之外，别有洞天</h2>
 
         <p>大家好，我是你们的讲师。前两章我们聊了通用基座数据集（以英文为主）和中文语料的现状。但如果你觉得预训练数据就是"把 Common Crawl 洗干净然后喂给模型"，那就大错特错了。</p>
@@ -93,6 +99,40 @@
                 </tr>
             </tbody>
         </table>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig04-t fig04-d" viewBox="0 0 720 270" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig04-t">The Stack 的逐级清洗漏斗</title>
+                <desc id="fig04-d">以 GitHub 原始抓取为 100% 起点，经许可证过滤保留约 70%、大文件过滤约 50%、精确去重约 35%、近重复去重后约 20%。</desc>
+                <rect width="720" height="270" rx="18" fill="#f7fdf9"/>
+                <g font-family="system-ui,'PingFang SC',sans-serif" font-size="12">
+                    <text x="360" y="30" text-anchor="middle" font-size="15" fill="#14532d">The Stack：抓取到去重版的逐级缩减</text>
+                    <g text-anchor="end" fill="#374151">
+                        <text x="88" y="72">原始抓取</text>
+                        <text x="88" y="110">许可证过滤</text>
+                        <text x="88" y="148">大文件过滤</text>
+                        <text x="88" y="186">精确去重</text>
+                        <text x="88" y="224">近重复去重</text>
+                    </g>
+                    <g fill="#dcfce7" stroke="#34d399">
+                        <rect x="100" y="56" width="560" height="24" rx="6"/>
+                        <rect x="100" y="94" width="392" height="24" rx="6"/>
+                        <rect x="100" y="132" width="280" height="24" rx="6"/>
+                        <rect x="100" y="170" width="196" height="24" rx="6"/>
+                        <rect x="100" y="208" width="112" height="24" rx="6"/>
+                    </g>
+                    <g fill="#065f46" font-weight="600" text-anchor="end">
+                        <text x="652" y="72">100%</text>
+                        <text x="484" y="110">~70%</text>
+                        <text x="372" y="148">~50%</text>
+                        <text x="288" y="186">~35%</text>
+                        <text x="204" y="224">~20%</text>
+                    </g>
+                    <text x="360" y="256" text-anchor="middle" font-size="11" fill="#64748b">缩减比例取自 4.1 节 The Stack 构建流程表。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 4-1</span>The Stack 的逐级清洗漏斗：以 GitHub 原始抓取为 100%，许可证过滤后约 70%，大文件过滤后约 50%，精确去重后约 35%，近重复（MinHash+LSH）去重后约 20%。对应 4.1 节的构建流程表。</figcaption>
+        </figure>
 
         <p>这里有一个非常重要的版本区分：<strong>The Stack（原始版）</strong>和 <strong>The Stack Dedup（去重版）</strong>。原始版包含大量重复的代码——同一个开源库的代码被数十个项目的 fork 重复收录。去重版通过 MinHash 模糊去重，将这个比例从 100% 缩减到了约 20%，但仍然保留了绝大部分代码能力。</p>
 
@@ -327,7 +367,7 @@
             <a href="index.html">📖 返回目录</a>
             <a href="05.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
