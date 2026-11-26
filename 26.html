@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第26章 2026年数据工程前沿趋势</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第26章 · 2026年数据工程前沿趋势</h1>
+            <p class="dek">数据工程的范式转移：Densing Law 把数据质量推到能力密度的高度，Model-as-Data-Filter 让模型评判自己的食物，端到端数据-训练闭环把一次性工程变成持续的 Data CI/CD，AI-Native 数据工厂重塑数据生产方式。</p>
+        </header>
         <h2>站在2026年回望：数据工程的范式转移</h2>
 
         <p>大家好，我是你们的讲师。走到第26章，我们已经一起经历了数据采集、清洗、去重、质量评分、分布式处理、合成数据、课程学习等一系列技术栈。如果放在2023年，你能掌握这些就已经是行业顶配的数据工程师了。但到了2026年，这个行业发生了太多变化——我们今天就来梳理那些正在重塑数据工程格局的前沿趋势。</p>
@@ -152,6 +158,33 @@ def quality_score(text: str, model) -> float:
         <div class="highlight">
             <strong>核心洞察：</strong>闭环策略的本质是从"一次性的数据工程"转向"持续的数据优化"。数据配比没有"银弹"，只有通过反馈循环不断迭代才能逼近最优配置。这个理念和 MLOps 的 CI/CD 非常相似——我们实际上在做的是 Data CI/CD。
         </div>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig26-t fig26-d" viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig26-t">端到端数据-训练闭环</title>
+                <desc id="fig26-d">用当前配比训练 1B 代理模型，跑 benchmark 与 loss 分析，识别各数据来源贡献，调整配比与质量阈值后重新训练，循环至指标收敛再训练最终模型。</desc>
+                <rect width="720" height="250" rx="18" fill="#fbfaff"/>
+                <defs><marker id="ar26" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#8b5cf6"/></marker></defs>
+                <g font-family="system-ui,'PingFang SC',sans-serif" text-anchor="middle" font-size="12">
+                    <text x="360" y="32" font-size="15" fill="#4c1d95">从线性流水线到数据-训练闭环</text>
+                    <rect x="40" y="62" width="190" height="54" rx="12" fill="#e0f2fe"/>
+                    <text x="135" y="86" fill="#0c4a6e">① 训练 1B 代理模型</text><text x="135" y="102" font-size="10" fill="#64748b">当前数据配比</text>
+                    <rect x="270" y="62" width="180" height="54" rx="12" fill="#ede9fe"/>
+                    <text x="360" y="86" fill="#4c1d95">② benchmark/loss 评估</text><text x="360" y="102" font-size="10" fill="#64748b">MMLU 等下游指标</text>
+                    <rect x="490" y="62" width="190" height="54" rx="12" fill="#dcfce7"/>
+                    <text x="585" y="86" fill="#14532d">③ 识别贡献数据</text><text x="585" y="102" font-size="10" fill="#64748b">正/负向来源</text>
+                    <g stroke="#8b5cf6" stroke-width="2" marker-end="url(#ar26)" fill="none">
+                        <line x1="230" y1="89" x2="266" y2="89"/><line x1="450" y1="89" x2="486" y2="89"/>
+                    </g>
+                    <rect x="270" y="168" width="180" height="48" rx="12" fill="#fef9c3"/>
+                    <text x="360" y="197" fill="#854d0e">④ 调整配比/阈值</text>
+                    <path d="M585 116 L585 192 L456 192" stroke="#8b5cf6" stroke-width="2" fill="none" marker-end="url(#ar26)" stroke-dasharray="5 4"/>
+                    <path d="M264 192 L135 192 L135 118" stroke="#8b5cf6" stroke-width="2" fill="none" marker-end="url(#ar26)" stroke-dasharray="5 4"/>
+                    <text x="360" y="238" font-size="11" fill="#64748b">对应 26.3 节的六步闭环：收敛后再用全量数据训练最终模型。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 26-1</span>端到端数据-训练闭环：① 用当前配比训练 1B 代理模型 → ② 跑 benchmark 与 loss 分析 → ③ 识别哪些数据来源贡献最大、哪些为负 → ④ 调整配比与质量阈值后重训，循环至指标收敛，再用全量数据训练最终模型。对应 26.3 节的 Data CI/CD 流程。</figcaption>
+        </figure>
 
         <p>我在2025年参与过一个项目，团队投入了大约4个月时间做数据闭环迭代。第一轮初始配比训练的1B代理模型在 MMLU 上只能达到38%；经过6轮数据优化后，同架构的1B模型达到了49%。提升了11个点——这个差距在大模型领域是代际差异。<strong>而这些提升完全来自于数据策略的优化，没有动一行模型代码。</strong></p>
 
@@ -343,7 +376,7 @@ def quality_score(text: str, model) -> float:
             <a href="index.html">📖 返回目录</a>
             <a href="27.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
