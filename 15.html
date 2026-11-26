@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第15章 分布式数据处理架构</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第15章 · 分布式数据处理架构</h1>
+            <p class="dek">单机装不下 TB 级语料时，如何把清洗管线铺到集群上：MapReduce 思维、Slurm 作业调度与 Ray 云原生引擎的取舍，以及分片策略、worker 分配与成本模型。</p>
+        </header>
         <h2>开篇：单机已死，分布式当立</h2>
 
         <p>大家好，我是你们的讲师。前面十四章我们聊了数据采集、清洗、去重、质量评分、内容过滤等各个环节的技术细节。你可能会有一种错觉——这些流程看起来并不复杂，在自己的笔记本电脑上跑一跑脚本不就搞定了吗？</p>
@@ -207,6 +213,44 @@ ds.write_json("s3://my-bucket/clean-data/")</code></pre>
                 </tr>
             </tbody>
         </table>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig15a-t fig15a-d" viewBox="0 0 720 268" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig15a-t">分布式数据流水线的四个阶段</title>
+                <desc id="fig15a-d">流水线从数据源经过分片，交给并行执行的 worker（可用 MapReduce、Slurm 或 Ray 承载），最后汇总去重输出。下方标注各阶段的关键决策点。</desc>
+                <rect width="720" height="268" rx="18" fill="#fbfaff"/>
+                <defs><marker id="ar15" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#8b5cf6"/></marker></defs>
+                <g font-family="system-ui,'PingFang SC',sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">TB 级清洗流水线的四个阶段</text>
+                    <g stroke="#8b5cf6" stroke-width="2" marker-end="url(#ar15)">
+                        <line x1="158" y1="104" x2="182" y2="104"/>
+                        <line x1="322" y1="104" x2="346" y2="104"/>
+                        <line x1="486" y1="104" x2="510" y2="104"/>
+                    </g>
+                    <g>
+                        <rect x="42" y="76" width="116" height="56" rx="12" fill="#ede9fe"/>
+                        <text x="100" y="100" font-size="13" fill="#4c1d95" text-anchor="middle">① 数据源</text>
+                        <text x="100" y="120" font-size="10" fill="#64748b" text-anchor="middle">WARC / JSONL / S3</text>
+                        <rect x="186" y="76" width="136" height="56" rx="12" fill="#e0f2fe"/>
+                        <text x="254" y="100" font-size="13" fill="#0c4a6e" text-anchor="middle">② 分片 shard</text>
+                        <text x="254" y="120" font-size="10" fill="#64748b" text-anchor="middle">URL 哈希 / 大小</text>
+                        <rect x="350" y="76" width="136" height="56" rx="12" fill="#dcfce7"/>
+                        <text x="418" y="100" font-size="13" fill="#14532d" text-anchor="middle">③ 并行 worker</text>
+                        <text x="418" y="120" font-size="10" fill="#64748b" text-anchor="middle">MapReduce/Slurm/Ray</text>
+                        <rect x="514" y="76" width="164" height="56" rx="12" fill="#fef3c7"/>
+                        <text x="596" y="100" font-size="13" fill="#78350f" text-anchor="middle">④ 汇总去重</text>
+                        <text x="596" y="120" font-size="10" fill="#64748b" text-anchor="middle">Merge / 输出 shard</text>
+                    </g>
+                    <text x="100" y="176" font-size="11" fill="#475569" text-anchor="middle">规模决定选型</text>
+                    <text x="254" y="176" font-size="11" fill="#475569" text-anchor="middle">平衡达成同分片总 token 相近</text>
+                    <text x="418" y="176" font-size="11" fill="#475569" text-anchor="middle">按阶段配 CPU / GPU</text>
+                    <text x="596" y="176" font-size="11" fill="#475569" text-anchor="middle">跨分片去重代价最高</text>
+                    <text x="24" y="222" font-size="11" fill="#64748b">分片与 worker 建议取自 15.4 / 15.5 节；Slurm vs Ray 对照见 15.3 节表格。</text>
+                    <text x="24" y="244" font-size="11" fill="#64748b">各阶段相对成本为教学示意，不代表具体集群实测数据。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 15-1</span>分布式清洗流水线的四个阶段：从数据源切分成分片、并行 worker 处理到最终汇总去重。分片方式与 worker 配置建议见 15.4、15.5 节，Slurm 与 Ray 的能力对照见 15.3 节表格。</figcaption>
+        </figure>
 
         <h2>15.4 数据分片策略：拆分是架构的第一步</h2>
 
@@ -418,7 +462,7 @@ datatrove run \
             <a href="index.html">📖 返回目录</a>
             <a href="16.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
