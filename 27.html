@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第27章 实战项目：构建1B模型训练数据集</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html" class="active">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第27章 · 实战项目：构建1B模型训练数据集</h1>
+            <p class="dek">端到端实战：从 ~2TB 原始 WARC 出发，经 Datatrove 清洗、MinHash 去重与 FastText 质量评分，按 45/25/15/10/5 的配比混合出 ~20B token 数据集，并用小模型验证效果、复盘踩坑经验。</p>
+        </header>
         <h2>从理论到实战：亲手搭建你的预训练数据流水线</h2>
 
         <p>大家好，我是你们的讲师。如果前26章都是"道"和"理"，那今天这一章就是纯粹的"术"。我们要亲手搭建一套端到端的预训练数据构建流水线，目标是为一个 1B 参数模型准备约 20B token 的训练数据（遵循 Chinchilla 最优数据比）。</p>
@@ -105,6 +111,28 @@
                 </tr>
             </tbody>
         </table>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig27-t fig27-d" viewBox="0 0 720 270" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig27-t">构建 1B 模型数据集的五步流水线</title>
+                <desc id="fig27-d">从数据源与配比设计开始，采集约 2TB 原始 WARC，经 Datatrove 清洗到约 200GB，去重与质量评分后约 100GB，配比混合输出约 80GB WebDataset，合计约 20B token。</desc>
+                <rect width="720" height="270" rx="18" fill="#f7fdf9"/>
+                <defs><marker id="ar27" markerWidth="9" markerHeight="9" refX="4" refY="6" orient="auto"><path d="M0,0 L4,6 L0,12" fill="#34d399"/></marker></defs>
+                <g font-family="system-ui,'PingFang SC',sans-serif" font-size="13">
+                    <text x="360" y="30" text-anchor="middle" font-size="15" fill="#14532d">从 2TB 原始数据到 20B token 的五步流水线</text>
+                    <g>
+                        <rect x="60" y="46" width="600" height="34" rx="9" fill="#eef2ff"/><text x="78" y="68" fill="#3730a3">① 数据源选择与配比设计</text><text x="642" y="68" text-anchor="end" font-size="11" fill="#64748b">清单 + 配比计划</text>
+                        <rect x="60" y="86" width="600" height="34" rx="9" fill="#e0f2fe"/><text x="78" y="108" fill="#0c4a6e">② 采集与原始提取</text><text x="642" y="108" text-anchor="end" font-size="11" fill="#64748b">~2TB WARC / JSONL</text>
+                        <rect x="60" y="126" width="600" height="34" rx="9" fill="#dcfce7"/><text x="78" y="148" fill="#14532d">③ Datatrove 清洗流水线</text><text x="642" y="148" text-anchor="end" font-size="11" fill="#64748b">~200GB 中间数据</text>
+                        <rect x="60" y="166" width="600" height="34" rx="9" fill="#fef9c3"/><text x="78" y="188" fill="#854d0e">④ 去重与质量评分</text><text x="642" y="188" text-anchor="end" font-size="11" fill="#64748b">~100GB 候选数据</text>
+                        <rect x="60" y="206" width="600" height="34" rx="9" fill="#ede9fe"/><text x="78" y="228" fill="#4c1d95">⑤ 配比混合与格式转换</text><text x="642" y="228" text-anchor="end" font-size="11" fill="#64748b">~80GB WebDataset</text>
+                    </g>
+                    <g stroke="#34d399" stroke-width="2" marker-end="url(#ar27)" fill="none"><line x1="360" y1="80" x2="360" y2="86"/><line x1="360" y1="120" x2="360" y2="126"/><line x1="360" y1="160" x2="360" y2="166"/><line x1="360" y1="200" x2="360" y2="206"/></g>
+                    <text x="360" y="258" text-anchor="middle" font-size="11" fill="#64748b">最终合计约 20B token；规模数据取自 27.1 节技术方案流程表（教学示意）。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 27-1</span>构建 1B 模型训练数据集的五步流水线：配比设计 → 采集约 2TB 原始 WARC → Datatrove 清洗至约 200GB → 去重与质量评分至约 100GB → 配比混合输出约 80GB WebDataset，最终合计约 20B token。规模数字对应 27.1 节流程表。</figcaption>
+        </figure>
 
         <h2>27.2 Step 1: 数据源选择与配比</h2>
 
@@ -442,7 +470,7 @@ C-Eval (中文)        │    42.1%     │     35.6%        │ +6.5%
             <a href="index.html">📖 返回目录</a>
             <a href="28.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
