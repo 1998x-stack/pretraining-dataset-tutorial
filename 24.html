@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第24章 NeMo Curator与GPU加速清洗</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第24章 · NeMo Curator 与 GPU 加速清洗</h1>
+            <p class="dek">当 256 核 CPU 跑 MinHash 一周不出结果，8 张 H100 不到 12 小时就收工：看 NeMo Curator 如何用 RAPIDS/cuDF 加速精确与模糊去重、PII 检测与质量评分，以及 GPU 清洗的成本账。</p>
+        </header>
         <h2>开篇：当清洗速度成为瓶颈，是时候请 GPU 出场了</h2>
 
         <p>大家好，我是你们的讲师。上一章我们用 Datatrove 搭建了一套完整的预处理管道，在 CPU 集群上跑得不错。但如果你处理的数据规模达到上百 TB 甚至 PB 级别，CPU 的处理速度就会变成你的主要瓶颈。尤其是 MinHash 去重这一步——生成数百万个文档的 256 个 n-gram 签名，在 CPU 上需要计算海量的哈希值，耗时惊人。</p>
@@ -167,6 +173,28 @@ cleaned.to_json("/data/deduped_dataset_minhash/")</code></pre>
         <div class="highlight">
             <strong>性能对比的启示：</strong>GPU 加速不是简单地"把 CPU 代码搬到 GPU 上运行"。NeMo Curator 的加速依赖于 RAPIDS 生态的深度优化——包括 GPU 内存管理、批次大小自动调优、以及异步 I/O 与计算的重叠。如果你只是用 PyTorch 把 MinHash 的哈希计算移植到 GPU 上，远达不到这个性能水平。
         </div>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig24a-t fig24a-d" viewBox="0 0 720 258" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig24a-t">CPU 与 GPU 去重吞吐量对比</title>
+                <desc id="fig24a-d">精确去重上 8 张 H100 达 18 TB/hr，约 512 核 CPU 集群的 2 TB/hr 的 9 倍；MinHash 模糊去重上 GPU 达 4 TB/hr，约 CPU 版 300 GB/hr 的 13 倍。</desc>
+                <rect width="720" height="258" rx="18" fill="#fbfaff"/>
+                <g font-family="system-ui,'PingFang SC',sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">去重吞吐量：CPU 集群 vs 8×H100（TB/hr）</text>
+                    <line x1="170" y1="52" x2="170" y2="216" stroke="#cbd5e1"/>
+                    <rect x="170" y="60" width="540" height="30" rx="6" fill="#7c3aed"/>
+                    <text x="176" y="80" font-size="12" fill="#fff">精确去重 · GPU 18 TB/hr</text>
+                    <rect x="170" y="98" width="60" height="30" rx="6" fill="#c4b5fd"/>
+                    <text x="240" y="118" font-size="12" fill="#5b21b6">精确去重 · CPU 2 TB/hr ≈ 9×</text>
+                    <rect x="170" y="140" width="120" height="30" rx="6" fill="#0ea5e9"/>
+                    <text x="298" y="160" font-size="12" fill="#0c4a6e">MinHash · GPU 4 TB/hr</text>
+                    <rect x="170" y="178" width="9" height="30" rx="4" fill="#7dd3fc"/>
+                    <text x="190" y="198" font-size="12" fill="#0369a1">MinHash · CPU 300 GB/hr ≈ 13×</text>
+                    <text x="24" y="240" font-size="11" fill="#64748b">吞吐量数值取自 24.2 节；比例文字为按原文倍数标注。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 24-1</span>两条流水线步骤的吞吐量对比：精确去重 18 TB/hr vs 2 TB/hr（≈9×），MinHash 模糊去重 4 TB/hr vs 300 GB/hr（≈13×）。数值取自 24.2 节，展示了 GPU 加速“一晚跑完一周任务”的来源。</figcaption>
+        </figure>
 
         <h2>24.3 GPU 加速的 PII 检测与多语言评分</h2>
 
@@ -313,7 +341,7 @@ writer.write(dataset)
             <a href="index.html">📖 返回目录</a>
             <a href="25.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
