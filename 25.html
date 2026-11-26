@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第25章 数据质量评估与消融实验</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,8 +43,12 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第25章 · 数据质量评估与消融实验</h1>
+            <p class="dek">怎么证明你洗的数据“更好”：用 360M–3B 代理模型低成本验证、用消融实验拆解各数据源贡献、用 PPL 曲线与下游 benchmark 交叉验证，并把失败模式接回持续改进循环。</p>
+        </header>
         <h2>开篇：你的数据集真的比别人的好吗？</h2>
 
         <p>大家好，我是你们的讲师。前两章我们分别用 Datatrove 和 NeMo Curator 搭建了数据清洗流水线，洗出了干净的数据。但有一个问题一直悬而未决：<strong>怎么证明你洗出来的数据是"更好"的？</strong></p>
@@ -123,6 +129,34 @@ else:
         <div class="tip">
             <strong>代理模型的陷阱：</strong>代理模型的 loss 和最终大模型的性能之间存在相关性，但不是 100% 正相关。小模型对某些数据特征（如反复重复、模板化文本）更敏感，这可能导致你错误地拒绝一些对大模型有益的数据（如多样化的长尾内容）。建议同时跟踪多个不同大小的代理模型（360M、1B、3B），取它们的共识结论。
         </div>
+
+        <figure>
+            <svg role="img" aria-labelledby="fig25a-t fig25a-d" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig25a-t">数据质量验证的闭环流程</title>
+                <desc id="fig25a-d">从提出数据假设出发，用代理模型与消融实验训练小模型，测量困惑度与下游 benchmark，判断改动是否有效，无效则将失败模式修复后重新验证。</desc>
+                <rect width="720" height="240" rx="18" fill="#fbfaff"/>
+                <defs><marker id="ar25" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#8b5cf6"/></marker></defs>
+                <g font-family="system-ui,'PingFang SC',sans-serif" text-anchor="middle" font-size="12">
+                    <text x="360" y="32" font-size="15" fill="#4c1d95">代理模型评估闭环</text>
+                    <rect x="24" y="66" width="150" height="54" rx="12" fill="#ede9fe"/>
+                    <text x="99" y="99" fill="#4c1d95">① 提出假设</text>
+                    <rect x="204" y="66" width="160" height="54" rx="12" fill="#e0f2fe"/>
+                    <text x="284" y="92" fill="#0c4a6e">② 代理训练</text><text x="284" y="108" font-size="10" fill="#64748b">360M / 1B / 3B</text>
+                    <rect x="394" y="66" width="150" height="54" rx="12" fill="#e0f2fe"/>
+                    <text x="469" y="92" fill="#0c4a6e">③ 测指标</text><text x="469" y="108" font-size="10" fill="#64748b">PPL / benchmark</text>
+                    <rect x="574" y="66" width="122" height="54" rx="12" fill="#dcfce7"/>
+                    <text x="635" y="99" fill="#14532d">④ 采纳</text>
+                    <g stroke="#8b5cf6" stroke-width="2" marker-end="url(#ar25)" fill="none">
+                        <line x1="174" y1="93" x2="200" y2="93"/><line x1="364" y1="93" x2="390" y2="93"/><line x1="544" y1="93" x2="570" y2="93"/>
+                    </g>
+                    <rect x="204" y="160" width="300" height="50" rx="12" fill="#fee2e2"/>
+                    <text x="354" y="190" fill="#b91c1c">⑤ 未达预期：修复失败模式后重跑</text>
+                    <path d="M469 120 L469 142 L354 142 L354 158" stroke="#e11d48" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#ar25)"/>
+                    <text x="360" y="228" font-size="11" fill="#64748b">代理模型尺寸与陷阱取自 25.1 节；闭环对应 25.6 节持续改进流程。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 25-1</span>数据质量验证闭环：提出假设 → 用 360M/1B/3B 代理模型训练 → 测 PPL 与下游 benchmark → 达标则采纳，否则定位失败模式、修复数据后重跑。代理模型策略见 25.1 节，循环对应 25.6 节的持续改进流程。</figcaption>
+        </figure>
 
         <h2>25.2 数据组成消融实验</h2>
 
@@ -402,7 +436,7 @@ RUBRIC = """
             <a href="index.html">📖 返回目录</a>
             <a href="26.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
