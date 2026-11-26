@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第18章 数据版本管理与溯源</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,9 +43,13 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
-        <h2>开篇：模型训练完了，你却说"我们忘了记录用了什么数据"</h2>
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第18章 · 数据版本管理与溯源</h1>
+            <p class="dek">当训练报告问起“最终用的是哪份数据”而全团队无人能答：用 DVC 给数据装 Git、用血缘追踪记录每条数据的来历、用 Dataset Card 文档化，再把数据治理接进 CI/CD 流水线。</p>
+        </header>
+        <h2>开篇：模型训练完了，你却说“我们忘了记录用了什么数据”</h2>
 
         <p>大家好，我是你们的讲师。2019 年我参与的第一个预训练项目结束后，团队需要撰写技术报告。其中有一个看似简单的问题把我们问住了：<strong>"最终用于训练的 dataset 是哪个版本的数据？"</strong></p>
 
@@ -110,7 +116,46 @@ outs:
             <strong>核心优势：</strong>DVC 解决了数据管理中一个根本性的矛盾——数据太大无法放进 Git，但数据版本的历史记录又需要像 Git 一样精确。通过"元数据进 Git，数据进远程存储"的架构，DVC 让数据版本管理变得和代码版本管理一样简单和可靠。
         </div>
 
-        <h2>18.2 数据血缘追踪：每条数据都有一本"户口本"</h2>
+        <figure>
+            <svg role="img" aria-labelledby="fig18a-t fig18a-d" viewBox="0 0 720 226" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig18a-t">数据集随着清洗阶段推进的版本依赖图</title>
+                <desc id="fig18a-d">从原始语料出发，依次经过清洗、去重、评分过滤得到 v1、v2、v3 版本，每个版本由内容哈希标识，最终生成训练集；任一阶段变更都会生成新版本并改变下游哈希。</desc>
+                <rect width="720" height="226" rx="18" fill="#fbfaff"/>
+                <defs><marker id="ar18" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#8b5cf6"/></marker></defs>
+                <g font-family="system-ui,'PingFang SC',sans-serif">
+                    <text x="24" y="34" font-size="15" fill="#4c1d95">数据版本依赖图（DVC 以内容哈希寻址）</text>
+                    <g stroke="#8b5cf6" stroke-width="2" marker-end="url(#ar18)">
+                        <line x1="122" y1="112" x2="146" y2="112"/>
+                        <line x1="246" y1="112" x2="270" y2="112"/>
+                        <line x1="370" y1="112" x2="394" y2="112"/>
+                        <line x1="494" y1="112" x2="518" y2="112"/>
+                    </g>
+                    <g text-anchor="middle" font-size="12">
+                        <rect x="24" y="88" width="98" height="48" rx="12" fill="#e2e8f0"/>
+                        <text x="73" y="118" fill="#334155">raw-CC</text>
+                        <rect x="148" y="88" width="98" height="48" rx="12" fill="#ede9fe"/>
+                        <text x="197" y="118" fill="#4c1d95">v1 清洗</text>
+                        <rect x="272" y="88" width="98" height="48" rx="12" fill="#e0f2fe"/>
+                        <text x="321" y="118" fill="#0c4a6e">v2 去重</text>
+                        <rect x="396" y="88" width="98" height="48" rx="12" fill="#dcfce7"/>
+                        <text x="445" y="118" fill="#14532d">v3 评分/过滤</text>
+                        <rect x="520" y="88" width="118" height="48" rx="12" fill="#fef3c7"/>
+                        <text x="579" y="118" fill="#78350f">训练集</text>
+                    </g>
+                    <g text-anchor="middle" font-size="10" fill="#64748b">
+                        <text x="134" y="80">clean</text>
+                        <text x="258" y="80">dedup</text>
+                        <text x="382" y="80">score</text>
+                        <text x="506" y="80">mix</text>
+                    </g>
+                    <text x="24" y="168" font-size="11" fill="#475569">每个节点存储内容哈希（如 <tspan font-family="ui-monospace,monospace">a1b2…</tspan>）；上游任一阶段变更都会产生新哈希并使下游失效。</text>
+                    <text x="24" y="190" font-size="11" fill="#64748b">依赖关系示意，阶段划分参考 18.1（DVC）与 18.2（血缘追踪）节。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 18-1</span>数据版本依赖图：raw-CC 经清洗、去重、评分过滤依次得到 v1/v2/v3，最终汇成训练集。每个节点以内容哈希寻址，上游任何一步变化都会生成新版本并让下游哈希失效——这正是 DVC 与血缘追踪能回答“训练到底用了哪份数据”的原因。</figcaption>
+        </figure>
+
+        <h2>18.2 数据血缘追踪：每条数据都有一本“户口本”</h2>
 
         <p>版本管理解决了"哪个版本"的问题，而<strong>数据血缘（data lineage）</strong>要解决的是"数据从哪来、经历了什么变化"的问题。一个好的数据血缘系统应该能回答以下问题：</p>
 
@@ -549,7 +594,7 @@ pipeline "数据质量门禁" {
             <a href="index.html">📖 返回目录</a>
             <a href="19.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
