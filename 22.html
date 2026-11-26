@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第22章 代码与数学数据专项处理</title>
     <link rel="stylesheet" href="theme.css">
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
 </head>
 <body>
+<a class="skip-link" href="#content">跳转至正文</a>
 <div class="double-border">
 <div class="container">
-    <div class="sidebar">
+    <nav class="sidebar" aria-label="课程目录">
         <h3>📊 课程目录</h3>
         <ul class="chapter-list">
             <li><a href="01.html">第1章 预训练数据决定模型上限</a></li>
@@ -41,9 +43,13 @@
             <li><a href="27.html">第27章 实战项目：构建1B模型训练数据集</a></li>
             <li><a href="28.html">第28章 规模化落地：从TB级到PB级的挑战</a></li>
         </ul>
-    </div>
-    <div class="main-content">
-        <h2>开篇：两种"不讲人话"的数据</h2>
+    </nav>
+    <main id="content" class="main-content"><article>
+        <header class="article-header">
+            <h1>第22章 · 代码与数学数据专项处理</h1>
+            <p class="dek">代码与数学“不讲人话”：用 AST/tree-sitter 解析代码结构与 docstring、按许可证过滤 The Stack、对 LaTeX 与公式做归一化，并构建可用的 Chain-of-Thought 推理数据。</p>
+        </header>
+        <h2>开篇：两种“不讲人话”的数据</h2>
 
         <p>大家好，我是你们的讲师。在大模型的世界里，代码和数学是两种非常特殊的数据——它们<strong>不讲人话</strong>。自然语言追求的是流畅、冗余、容错；而代码追求精确、无歧义、可执行；数学追求严谨、符号化、可证明。这两种数据在预训练中的重要性已经被反复证明——增加代码和数学数据的配比，可以直接提升模型的推理能力，这是行业内几乎公开的秘密。</p>
 
@@ -242,6 +248,42 @@ def filter_by_license(repo_metadata):
     # 如果有，即使根目录是 MIT，该文件也标记为高风险
     return "accept"</code></pre>
 
+        <figure>
+            <svg role="img" aria-labelledby="fig22a-t fig22a-d" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+                <title id="fig22a-t">代码仓库许可证过滤决策流程</title>
+                <desc id="fig22a-d">从仓库元数据出发，检测根目录许可证：强 Copyleft 或非商业许可直接拒绝；无 LICENSE 文件默认保留权利也拒绝；宽松许可则进入文件级复检，命中 GPL 文件头才拒绝，否则接受。</desc>
+                <rect width="720" height="300" rx="18" fill="#fbfaff"/>
+                <defs><marker id="ar22" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#8b5cf6"/></marker></defs>
+                <g font-family="system-ui,'PingFang SC',sans-serif" text-anchor="middle">
+                    <text x="360" y="30" font-size="15" fill="#4c1d95">许可证过滤：从仓库元数据到接受/拒绝</text>
+                    <rect x="270" y="46" width="180" height="40" rx="10" fill="#ede9fe"/>
+                    <text x="360" y="71" font-size="12" fill="#4c1d95">仓库元数据</text>
+                    <line x1="360" y1="86" x2="360" y2="108" stroke="#8b5cf6" stroke-width="2" marker-end="url(#ar22)"/>
+                    <rect x="250" y="110" width="220" height="44" rx="10" fill="#e0f2fe"/>
+                    <text x="360" y="137" font-size="12" fill="#0c4a6e">根目录许可证分类？</text>
+                    <g stroke="#8b5cf6" stroke-width="2" marker-end="url(#ar22)" fill="none">
+                        <path d="M270 154 L140 196"/><path d="M360 156 L360 196"/><path d="M450 154 L580 196"/>
+                    </g>
+                    <g font-size="10" fill="#64748b">
+                        <text x="190" y="176">copyleft / NC</text><text x="360" y="180">无 LICENSE</text><text x="540" y="176">permissive</text>
+                    </g>
+                    <g font-size="12">
+                        <rect x="30" y="200" width="220" height="56" rx="10" fill="#fee2e2"/>
+                        <text x="140" y="224" fill="#b91c1c">GPL / AGPL / CC-NC</text>
+                        <text x="140" y="242" fill="#b91c1c">→ 拒绝</text>
+                        <rect x="250" y="200" width="220" height="56" rx="10" fill="#fee2e2"/>
+                        <text x="360" y="224" fill="#b91c1c">默认保留所有权利</text>
+                        <text x="360" y="242" fill="#b91c1c">→ 拒绝（保守策略）</text>
+                        <rect x="470" y="200" width="220" height="56" rx="10" fill="#dcfce7"/>
+                        <text x="580" y="224" fill="#14532d">文件头含 GPL？</text>
+                        <text x="580" y="242" fill="#14532d">是→拒绝 / 否→接受</text>
+                    </g>
+                    <text x="360" y="284" font-size="11" fill="#64748b">决策取自 22.3 节许可证过滤 pipeline 伪代码；分支划分与拒绝策略为教学示意。</text>
+                </g>
+            </svg>
+            <figcaption><span class="fig-label">图 22-1</span>许可证过滤的三条分支：强 Copyleft/非商业许可与“无 LICENSE”均保守拒绝，只有宽松许可才进入文件级复检，命中 GPL 文件头时才拒绝。决策规则见 22.3 节过滤伪代码。</figcaption>
+        </figure>
+
         <h2>22.4 数学数据的特殊处理</h2>
 
         <p>如果说代码数据的挑战在于<strong>结构解析</strong>，那么数学数据的挑战则在于<strong>符号处理</strong>。数学文本大量使用 LaTeX 公式、特殊符号和复杂排版，预处理时稍有不慎就会丢失关键信息。</p>
@@ -355,7 +397,7 @@ def filter_cp_data(submissions):
             <a href="index.html">📖 返回目录</a>
             <a href="23.html">下一章 →</a>
         </div>
-    </div>
+    </article></main>
 </div>
 </div>
 </body>
