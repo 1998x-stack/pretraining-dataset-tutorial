@@ -320,6 +320,25 @@ def find_contaminated_spans(
             <figcaption><span class="fig-label">图 17-1</span>把 17.4 节的阈值表画成区间条：数学推理类容忍更短的匹配（5–8），代码生成类要求更长（10–13）。基线是 GPT-3 论文提出的 8-token 判据，各区间为经验推荐而非硬性标准。</figcaption>
         </figure>
 
+        <section class="ex" aria-labelledby="cont-ex-h">
+            <h3 id="cont-ex-h">交互实验：n-gram 阈值与「偶然重合」概率</h3>
+            <p>若 token 词表大小为 V、匹配长度为 n，两个不相关片段恰好共享 n 个连续 token 的概率约为 (1/V)<sup>n</sup>。调节 V 与 n，观察阈值每加 1，偶然重合概率数量级下降的幅度。无脚本时默认 V = 50000、n = 8（GPT-3 判据）。</p>
+            <div class="ex-row">
+                <label for="cont-v">V（词表大小）：<output id="cont-v-out" for="cont-v">50000</output></label>
+                <input id="cont-v" type="range" min="10000" max="200000" step="10000" value="50000">
+            </div>
+            <div class="ex-row">
+                <label for="cont-n">n（连续 token 数）：<output id="cont-n-out" for="cont-n">8</output></label>
+                <input id="cont-n" type="range" min="4" max="14" step="1" value="8">
+            </div>
+            <div class="ex-row ex-presets" role="group" aria-label="17.4 节 benchmark 预设阈值">
+                <button type="button" data-n="8">自然语言问答 8</button>
+                <button type="button" data-n="5">数学推理 5</button>
+                <button type="button" data-n="10">代码生成 10</button>
+            </div>
+            <p id="cont-out" class="ex-out" aria-live="polite">当 V = 50000、n = 8 时，偶然重合概率约 2.6 × 10⁻³⁸，可忽略不计；这就是 8-gram 判据的统计学依据。</p>
+        </section>
+
         <div class="warning">
             <strong>一个隐蔽的问题：</strong>仅仅依赖 n-gram 匹配会漏掉一种重要的污染形式——<strong>语义污染</strong>。模型可能没有"背诵" benchmark 题目的原文字符串，但训练数据中包含了大量与 benchmark 问题"同义但不同表述"的内容（比如 benchmark 的 train set、few-shot 示例、或者社区的解题讨论）。这种"软污染"比硬匹配更难检测，也更有争议。目前业界对如何处理语义污染还没有共识。
         </div>
@@ -490,5 +509,29 @@ executor.run()</code></pre>
     </article></main>
 </div>
 </div>
+<script>
+(function(){
+  var v=document.getElementById('cont-v'),n=document.getElementById('cont-n');
+  if(!v||!n)return;
+  var vo=document.getElementById('cont-v-out'),no=document.getElementById('cont-n-out'),out=document.getElementById('cont-out');
+  function fmtLog(log10p){
+    if(log10p>-2)return '≈ '+(Math.pow(10,log10p)).toFixed(3);
+    var exp=Math.floor(log10p),man=Math.pow(10,log10p-exp);
+    return man.toFixed(1)+' × 10^'+exp;
+  }
+  function render(){
+    var V=parseInt(v.value,10),N=parseInt(n.value,10);
+    var log10p=-N*Math.log10(V);
+    vo.textContent=V;no.textContent=N;
+    out.textContent='当 V = '+V+'、n = '+N+' 时，偶然重合概率约 '+fmtLog(log10p)+'。'+
+      (log10p<-30?'可以忽略不计。':log10p<-10?'极不可能，但仍建议结合语义污染一起看。':'量级偏高，检查阈值是否过短。');
+  }
+  [v,n].forEach(function(el){el.addEventListener('input',render);});
+  document.querySelectorAll('.ex-presets button').forEach(function(btn){
+    btn.addEventListener('click',function(){n.value=btn.dataset.n;render();});
+  });
+  render();
+})();
+</script>
 </body>
 </html>
