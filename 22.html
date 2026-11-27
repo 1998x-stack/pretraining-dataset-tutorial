@@ -284,6 +284,28 @@ def filter_by_license(repo_metadata):
             <figcaption><span class="fig-label">图 22-1</span>许可证过滤的三条分支：强 Copyleft/非商业许可与“无 LICENSE”均保守拒绝，只有宽松许可才进入文件级复检，命中 GPL 文件头时才拒绝。决策规则见 22.3 节过滤伪代码。</figcaption>
         </figure>
 
+        <section class="ex" aria-labelledby="lic-ex-h">
+            <h3 id="lic-ex-h">交互实验：许可证过滤决策</h3>
+            <p>选择根目录许可证分类与文件头情况，得到接受 / 拒绝的判定。规则与 22.3 节过滤伪代码一致：强 Copyleft 与 CC-NC 直接拒绝，无 LICENSE 文件保守拒绝，仅宽松许可才进入文件级复检。</p>
+            <div class="ex-row"><label for="lic-type">根目录许可证分类：</label>
+                <select id="lic-type">
+                    <option value="permissive">宽松（MIT / Apache-2.0 / BSD）</option>
+                    <option value="copyleft">强 Copyleft（GPL / AGPL）</option>
+                    <option value="nc">非商业（CC-BY-NC）</option>
+                    <option value="none">无 LICENSE 文件</option>
+                </select>
+            </div>
+            <div class="ex-row"><label for="lic-head">文件头是否命中 GPL 关键字：</label>
+                <select id="lic-head"><option value="no">否</option><option value="yes">是</option></select>
+            </div>
+            <div class="ex-row ex-presets" role="group" aria-label="案例预设">
+                <button type="button" data-type="permissive" data-head="no">MIT 干净文件</button>
+                <button type="button" data-type="permissive" data-head="yes">MIT 仓库含 GPL 文件头</button>
+                <button type="button" data-type="none" data-head="no">无 LICENSE</button>
+            </div>
+            <p id="lic-out" class="ex-out" aria-live="polite">宽松许可 + 文件头未命中 GPL：接受（进入训练数据）。</p>
+        </section>
+
         <h2>22.4 数学数据的特殊处理</h2>
 
         <p>如果说代码数据的挑战在于<strong>结构解析</strong>，那么数学数据的挑战则在于<strong>符号处理</strong>。数学文本大量使用 LaTeX 公式、特殊符号和复杂排版，预处理时稍有不慎就会丢失关键信息。</p>
@@ -400,5 +422,25 @@ def filter_cp_data(submissions):
     </article></main>
 </div>
 </div>
+<script>
+(function(){
+  var type=document.getElementById('lic-type'),head=document.getElementById('lic-head');
+  if(!type||!head)return;
+  var out=document.getElementById('lic-out');
+  function render(){
+    var t=type.value,h=head.value;
+    if(t==='copyleft'){out.textContent='强 Copyleft（GPL / AGPL）：拒绝——分发时可能要求开源，法务建议在训练数据中完全排除。';return;}
+    if(t==='nc'){out.textContent='非商业许可（CC-BY-NC）：拒绝——REJECTED_LICENSES 命中，无法确认商用授权。';return;}
+    if(t==='none'){out.textContent='无 LICENSE 文件：拒绝——未声明即默认保留所有权利，保守策略下不进训练数据。';return;}
+    if(h==='yes'){out.textContent='宽松许可 + 文件头命中 GPL：该文件属高风险，被拒绝（即使根目录是 MIT）。';return;}
+    out.textContent='宽松许可 + 文件头未命中 GPL：接受（进入训练数据）。';
+  }
+  [type,head].forEach(function(el){el.addEventListener('change',render);});
+  document.querySelectorAll('.ex-presets button').forEach(function(btn){
+    btn.addEventListener('click',function(){type.value=btn.dataset.type;head.value=btn.dataset.head;render();});
+  });
+  render();
+})();
+</script>
 </body>
 </html>
