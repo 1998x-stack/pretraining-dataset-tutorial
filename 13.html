@@ -256,6 +256,19 @@ def ppl_based_filter(doc: dict) -> bool:
             <figcaption><span class="fig-label">图 13-1</span>质量评分的本质是把连续评分变成一个保留/丢弃的切分：竖线是 3.0 阈值，左侧灰柱丢弃、右侧绿柱保留。柱高为示意，用来说明阈值位置而非真实分布。</figcaption>
         </figure>
 
+        <section class="ex" aria-labelledby="thr-ex-h">
+            <h3 id="thr-ex-h">交互实验：评分阈值与保留比例</h3>
+            <p>使用与图 13-1 相同的教学示意分布（评分 0–5 的文档权重为 24 / 48 / 72 / 108 / 132 / 72），拖动阈值查看保留与丢弃的文档比例。柱高为示意，非实测直方图。</p>
+            <div class="ex-row"><label for="thr-v">阈值（保留评分 ≥ 阈值）：<output id="thr-v-out" for="thr-v">3.0</output></label><input id="thr-v" type="range" min="0" max="5" step="0.5" value="3"></div>
+            <div class="ex-row ex-presets" role="group" aria-label="阈值预设">
+                <button type="button" data-t="3">3.0（常见）</button>
+                <button type="button" data-t="4">4.0（严格）</button>
+                <button type="button" data-t="2">2.0（宽松）</button>
+            </div>
+            <div style="background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;max-width:520px;margin:8px 0" role="img" aria-label="保留文档比例条"><span id="thr-keep" style="display:block;height:100%;background:#22c55e;width:68%"></span></div>
+            <p id="thr-out" class="ex-out" aria-live="polite">阈值 3.0：保留 68%（评分 3–5），丢弃 32%（评分 0–2）。</p>
+        </section>
+
         <p>但固定阈值的局限性也很明显：不同领域的文档质量分布不同。一篇数学论文可能因为术语密集而被评分较低，但它的教育价值实际上很高。因此，更先进的方案是<strong>领域自适应的阈值</strong>——按分类（如科技、新闻、文学、学术）分别设定阈值，或者设定每个域保留前百分之多少的文档（如保留每个域的前 30%）。</p>
 
         <pre><code>def adaptive_threshold_filter(documents: list, keep_ratio: float = 0.3):
@@ -296,5 +309,28 @@ def ppl_based_filter(doc: dict) -> bool:
     </article></main>
 </div>
 </div>
+<script>
+(function(){
+  var t=document.getElementById('thr-v'),out=document.getElementById('thr-out');
+  if(!t||!out)return;
+  var to=document.getElementById('thr-v-out'),bar=document.getElementById('thr-keep');
+  var w=[24,48,72,108,132,72];
+  var total=w.reduce(function(a,b){return a+b;},0);
+  function render(){
+    var th=parseFloat(t.value);
+    var cut=Math.ceil(th),kept=0;
+    for(var i=cut;i<6;i++) kept+=w[i];
+    var keepPct=kept/total*100;
+    to.textContent=th.toFixed(1);
+    bar.style.width=keepPct.toFixed(1)+'%';
+    out.textContent='阈值 '+th.toFixed(1)+'：保留 '+keepPct.toFixed(0)+'%（评分 '+cut+'–5），丢弃 '+(100-keepPct).toFixed(0)+'%'+(cut>0?'（评分 0–'+(cut-1)+'）':'（无）')+'。';
+  }
+  t.addEventListener('input',render);
+  document.querySelectorAll('.ex-presets button').forEach(function(btn){
+    btn.addEventListener('click',function(){t.value=btn.dataset.t;render();});
+  });
+  render();
+})();
+</script>
 </body>
 </html>
