@@ -211,6 +211,19 @@ DataLoader 缓冲:             取决于 prefetch_factor
 ─────────────────────────────────────────
 总计:                        ~127 GB + 数据缓冲</code></pre>
 
+        <section class="ex" aria-labelledby="mem-ex-h">
+            <h3 id="mem-ex-h">交互实验：模型状态显存占用</h3>
+            <p>只计算参数、梯度与 Adam 优化器状态（三者之外还有激活值、数据缓冲与通信开销）：FP16 参数 2 bytes/参数、FP16 梯度 2 bytes/参数、Adam 状态 12 bytes/参数。拖动参数量，看状态显存与 A100-80G 的倍数关系。校准点：7B 模型对应 14 + 14 + 84 = 112 GB，与本页 16.3 节公式一致。</p>
+            <div class="ex-row"><label for="mem-p">模型参数量（B）：<output id="mem-p-out" for="mem-p">7</output></label><input id="mem-p" type="range" min="1" max="70" step="1" value="7"></div>
+            <div class="ex-row ex-presets" role="group" aria-label="模型规模预设">
+                <button type="button" data-p="1">1B</button>
+                <button type="button" data-p="7">7B</button>
+                <button type="button" data-p="13">13B</button>
+                <button type="button" data-p="70">70B</button>
+            </div>
+            <p id="mem-out" class="ex-out" aria-live="polite">7B：参数 14GB + 梯度 14GB + Adam 状态 84GB = 112GB，仅状态就已超过单张 A100-80G。</p>
+        </section>
+
         <p>可以看到，光是模型训练本身就消耗了 127 GB 显存，这已经接近一张 A100-80G 的承载上限了（需要用 ZeRO-3 或张量并行来分摊）。数据加载能"分到"的内存非常有限——通常只有几个 GB。以下是一个综合性的内存预算表：</p>
 
         <table>
@@ -547,5 +560,26 @@ dataloader = DataLoader(
     </article></main>
 </div>
 </div>
+<script>
+(function(){
+  var p=document.getElementById('mem-p'),out=document.getElementById('mem-out');
+  if(!p||!out)return;
+  var po=document.getElementById('mem-p-out');
+  function fmt(x){return x>=10?x.toFixed(0):x.toFixed(1);}
+  function render(){
+    var P=parseInt(p.value,10);
+    var params=P*2,grads=P*2,opt=P*12,total=params+grads+opt;
+    po.textContent=P;
+    var gpus=(total/80);
+    out.textContent=P+'B：参数 '+params+'GB + 梯度 '+grads+'GB + Adam 状态 '+opt+'GB = '+total+'GB（'+fmt(gpus)+' 张 A100-80G 的容量）。'+
+      (total>80?'仅状态就已超过单张 A100-80G，需要 ZeRO / 张量并行分摊。':'加上激活值、数据缓冲与通信开销后仍需预留余量。');
+  }
+  p.addEventListener('input',render);
+  document.querySelectorAll('.ex-presets button').forEach(function(btn){
+    btn.addEventListener('click',function(){p.value=btn.dataset.p;render();});
+  });
+  render();
+})();
+</script>
 </body>
 </html>
