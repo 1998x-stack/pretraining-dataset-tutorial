@@ -226,3 +226,8 @@ figcaption {
 .ex-presets button { font: inherit; font-size: 0.85rem; padding: 6px 10px; border: 1px solid #a78bfa; background: #fff; color: #5b21b6; border-radius: 8px; cursor: pointer; }
 .ex-presets button:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
 .ex-out { margin: 10px 0 0; padding: 8px 10px; background: #ede9fe; border-radius: 8px; font-size: 0.92rem; color: #4c1d95; }
+.ex-bar { border-radius: 6px; height: 14px; overflow: hidden; max-width: 520px; margin: 8px 0; background: #e5e7eb; }
+.ex-bar > span { display: block; height: 100%; background: #7c3aed; }
+.ex-bar-purple { background: #e9d5ff; }
+.ex-bar-green { background: #e5e7eb; }
+.ex-bar-green > span { background: #22c55e; }
