@@ -110,14 +110,14 @@
                     <td>10.1</td>
                     <td>7.7</td>
                     <td>最稳定</td>
-                    <td><strong>在所有规模上最佳</strong></td>
+                    <td><strong>调度类策略中最稳定</strong></td>
                 </tr>
                 <tr>
                     <td>动态领域加权</td>
                     <td>10.0</td>
                     <td>7.6</td>
                     <td>需要监控</td>
-                    <td>可用于精调阶段</td>
+                    <td>可用于精调阶段（增益小）</td>
                 </tr>
             </tbody>
         </table>
@@ -125,7 +125,7 @@
         <figure>
             <svg role="img" aria-labelledby="fig-curr-title fig-curr-desc" viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg">
                 <title id="fig-curr-title">不同数据调度策略的最终困惑度 PPL</title>
-                <desc id="fig-curr-desc">对比五种数据调度策略在 7B 与 70B 规模上的最终困惑度，PPL 越低越好；静态 50-30-20 混合在两种规模上都最优，由难到易反课程最差。</desc>
+                <desc id="fig-curr-desc">对比五种数据调度策略在 7B 与 70B 规模上的最终困惑度，PPL 越低越好；静态 50-30-20 混合最稳定（10.1 / 7.7），动态领域加权略低（10.0 / 7.6），由难到易反课程最差。</desc>
                 <rect width="720" height="320" rx="18" fill="#fbfaff"/>
                 <g font-family="system-ui, 'PingFang SC', sans-serif">
                     <text x="24" y="34" font-size="15" fill="#4c1d95">五种数据调度策略的最终 PPL（越低越好）</text>
@@ -149,8 +149,21 @@
                     </g>
                 </g>
             </svg>
-            <figcaption><span class="fig-label">图 21-1</span>五种数据调度策略在 7B 与 70B 上的最终困惑度对比：<strong>静态 50-30-20 混合在两种规模下均取得最低 PPL</strong>，反课程（由难到易）最差；数值取自本节 21.2 引用的 2026 年论文对比表。</figcaption>
+            <figcaption><span class="fig-label">图 21-1</span>五种数据调度策略在 7B 与 70B 上的最终困惑度对比：<strong>静态 50-30-20 混合（7B 10.1 / 70B 7.7）最稳定</strong>，动态领域加权数值最低（10.0 / 7.6）但增益很小且需监控，反课程（由难到易）最差；数值取自本节 21.2 引用的 2026 年论文对比表。</figcaption>
         </figure>
+
+        <section class="ex" aria-labelledby="curr-ex-h">
+            <h3 id="curr-ex-h">交互实验：五种调度策略的 PPL 对比</h3>
+            <p>选择一种策略，查看它在 7B / 70B 上的最终 PPL，以及相对五个策略中最优值（7B 10.0、70B 7.6）的差距。数值取自 21.2 节对比表。</p>
+            <div class="ex-row ex-presets" role="group" aria-label="数据调度策略">
+                <button type="button" data-i="0" aria-pressed="false">完全随机打乱</button>
+                <button type="button" data-i="1" aria-pressed="false">由易到难</button>
+                <button type="button" data-i="2" aria-pressed="false">由难到易</button>
+                <button type="button" data-i="3" aria-pressed="false">静态 50-30-20</button>
+                <button type="button" data-i="4" aria-pressed="false">动态领域加权</button>
+            </div>
+            <p id="curr-out" class="ex-out" aria-live="polite">选择一种调度策略查看结果。</p>
+        </section>
 
         <p>所谓的"50-30-20 静态混合"指的是：50% 通用网络文本 + 30% 高质量精选文 + 20% 代码/数学。每一批次（batch）都从这三个池子中按固定比例采样，然后在训练全程都保持这个比例。就这么简单——不需要课程、不需要排序、不需要动态调整。</p>
 
@@ -337,5 +350,26 @@ def check_data_exhaustion(data_plan, data_inventory):
     </article></main>
 </div>
 </div>
+<script>
+(function(){
+  var btns=document.querySelectorAll('.ex-presets button');
+  var out=document.getElementById('curr-out');
+  if(!btns.length||!out)return;
+  var names=['完全随机打乱','由易到难课程','由难到易（反课程）','静态 50-30-20 混合','动态领域加权'];
+  var p7=[10.2,10.3,10.5,10.1,10.0];
+  var p70=[7.8,7.9,8.1,7.7,7.6];
+  var best7=Math.min.apply(null,p7),best70=Math.min.apply(null,p70);
+  btns.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var i=parseInt(btn.dataset.i,10);
+      btns.forEach(function(b){b.setAttribute('aria-pressed',b===btn?'true':'false');});
+      var d7=(p7[i]-best7).toFixed(1),d70=(p70[i]-best70).toFixed(1);
+      out.textContent=names[i]+'：7B PPL '+p7[i].toFixed(1)+'（较最优 +'+d7+'），70B PPL '+p70[i].toFixed(1)+'（较最优 +'+d70+'）。'+
+        (i===2?'反课程最差，不推荐。':i===3?'静态混合最稳定，是首选起点。':i===4?'动态领域加权数值最低，但增益很小、需监控，适用于精调阶段。':'可作为基线对比。');
+    });
+  });
+  btns[3].click();
+})();
+</script>
 </body>
 </html>
