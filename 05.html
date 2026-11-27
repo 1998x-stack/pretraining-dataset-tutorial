@@ -264,6 +264,22 @@
             <figcaption><span class="fig-label">图 5-1</span>把 5.4 节的管线文字转成条形长度：数据量在各阶段单调递减，前三级（语言 / URL / 精确去重）就削去了约六成，最终只剩约 7TB。数值为原文给出的单批次近似值。</figcaption>
         </figure>
 
+        <section class="ex" aria-labelledby="fw-ex-h">
+            <h3 id="fw-ex-h">交互实验：FineWeb 漏斗的逐级剩余量</h3>
+            <p>拖动滑杆或点击阶段按钮，查看经过第 n 级清洗后剩余的数据量与累计缩减比例。各阶段数值取自 5.4 节管线图的单批次近似量。</p>
+            <div class="ex-row"><label for="fw-stage">清洗阶段（0 = 原始 WET）：<output id="fw-stage-out" for="fw-stage">0</output></label><input id="fw-stage" type="range" min="0" max="6" step="1" value="0"></div>
+            <div class="ex-row ex-presets" role="group" aria-label="清洗阶段预设">
+                <button type="button" data-stage="1">1 语言过滤</button>
+                <button type="button" data-stage="2">2 URL 过滤</button>
+                <button type="button" data-stage="3">3 精确去重</button>
+                <button type="button" data-stage="4">4 模糊去重</button>
+                <button type="button" data-stage="5">5 启发式过滤</button>
+                <button type="button" data-stage="6">6 分类器评分</button>
+            </div>
+            <div style="background:#e9d5ff;border-radius:6px;height:14px;overflow:hidden;max-width:520px;margin:8px 0" role="img" aria-label="剩余数据量比例条"><span id="fw-bar" style="display:block;height:100%;background:#7c3aed;width:100%"></span></div>
+            <p id="fw-out" class="ex-out" aria-live="polite">原始 WET：约 100TB，累计缩减 0%，剩余 100%。</p>
+        </section>
+
         <p>注意看这个缩减曲线：从 100TB 到 7TB，缩减了 <strong>93%</strong>。这意味着每 15 个 CC 页面中只有 1 个最终进入了训练集。这不是因为 FineWeb 太"挑剔"——而是因为互联网上的大部分页面确实不适合作为训练数据。</p>
 
         <div class="tip">
@@ -318,5 +334,26 @@
     </article></main>
 </div>
 </div>
+<script>
+(function(){
+  var stage=document.getElementById('fw-stage');
+  if(!stage)return;
+  var out=document.getElementById('fw-out'),so=document.getElementById('fw-stage-out'),bar=document.getElementById('fw-bar');
+  var tb=[100,60,50,35,20,12,7];
+  var names=['原始 WET','语言过滤','URL 过滤','精确去重','模糊去重','启发式过滤','分类器评分'];
+  function render(){
+    var s=parseInt(stage.value,10),v=tb[s],pct=v/100*100;
+    so.textContent=s;
+    bar.style.width=pct.toFixed(1)+'%';
+    out.textContent=(s===0?'原始 WET':('第 '+s+' 级 · '+names[s]))+'：约 '+v+'TB，'+
+      '相对原始 100TB 累计缩减 '+((100-v)).toFixed(0)+'%，仍保留 '+pct.toFixed(0)+'%。';
+  }
+  stage.addEventListener('input',render);
+  document.querySelectorAll('.ex-presets button').forEach(function(btn){
+    btn.addEventListener('click',function(){stage.value=btn.dataset.stage;render();});
+  });
+  render();
+})();
+</script>
 </body>
 </html>
