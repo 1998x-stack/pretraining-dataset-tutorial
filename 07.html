@@ -124,6 +124,22 @@
             <figcaption><span class="fig-label">图 7-1</span>把 70-15-10-5 近似配比画成整体 100% 的一条 token 占比带：<strong>网页 70%</strong>、书籍与 Wikipedia <strong>15%</strong>、代码与学术论文 <strong>10%</strong>、对话与指令等 <strong>5%</strong>。比例取自本节 7.1 所述 LLaMA 论文披露类别合并后的近似值。</figcaption>
         </figure>
 
+        <section class="ex" aria-labelledby="mix-ex-h">
+            <h3 id="mix-ex-h">交互实验：权重归一化与 token 预算</h3>
+            <p>拖动四类来源的权重，页面会按比例归一化到 100%，并换算成给定 token 预算下的绝对数量。无脚本时默认展示 70-15-10-5。</p>
+            <div class="ex-row"><label for="mix-web">网页权重：<output id="mix-web-out" for="mix-web">70</output></label><input id="mix-web" type="range" min="0" max="100" step="5" value="70"></div>
+            <div class="ex-row"><label for="mix-book">书籍 / Wikipedia 权重：<output id="mix-book-out" for="mix-book">15</output></label><input id="mix-book" type="range" min="0" max="100" step="5" value="15"></div>
+            <div class="ex-row"><label for="mix-code">代码 / 学术论文权重：<output id="mix-code-out" for="mix-code">10</output></label><input id="mix-code" type="range" min="0" max="100" step="5" value="10"></div>
+            <div class="ex-row"><label for="mix-chat">对话 / 指令权重：<output id="mix-chat-out" for="mix-chat">5</output></label><input id="mix-chat" type="range" min="0" max="100" step="5" value="5"></div>
+            <div class="ex-row"><label for="mix-budget">token 预算（B tokens）：<output id="mix-budget-out" for="mix-budget">1000</output></label><input id="mix-budget" type="range" min="100" max="2000" step="100" value="1000"></div>
+            <div class="ex-row ex-presets" role="group" aria-label="配比预设">
+                <button type="button" data-w="70" data-k="15" data-c="10" data-t="5">70-15-10-5</button>
+                <button type="button" data-w="25" data-k="25" data-c="25" data-t="25">均匀混合</button>
+                <button type="button" data-w="55" data-k="15" data-c="25" data-t="5">代码加权</button>
+            </div>
+            <p id="mix-out" class="ex-out" aria-live="polite">归一化配比：网页 70% / 书籍 15% / 代码论文 10% / 对话 5%；预算 1000B token 时分别约为 700B / 150B / 100B / 50B token。</p>
+        </section>
+
         <p>这个比例不是凭空出现的——它<strong>大致反映了 LLaMA 系列和 GPT 系列模型论文中披露的数据配比</strong>。LLaMA 论文中提到，他们的训练数据中 Common Crawl 占 67%，C4 占 15%，Wikipedia 占 4.5%，GitHub 占 4.5%，Books 占 4.5%，ArXiv 占 2.5%，StackExchange 占 2.0%。把这些数字按照类别合并，你会发现非常接近 70-15-10-5 这个比例。</p>
 
         <p>但这里有一个重要的提醒：<strong>这些比例是 token 级别的比例，不是文件数量或字节数级别的比例。</strong> 因为不同类型的文本经过 tokenizer 后的压缩比不同——数学文本包含大量数字和符号，token 数通常比等长自然语言文本要少；中文文本的 token 数也比英文要多（因为中文字符被切得更碎）。所以按 token 配比和按字节配比是不同的，这是我们在实际配比时必须明确的。</p>
@@ -341,5 +357,28 @@
     </article></main>
 </div>
 </div>
+<script>
+(function(){
+  var ids=['mix-web','mix-book','mix-code','mix-chat'];
+  var els=ids.map(function(id){return document.getElementById(id);});
+  var budget=document.getElementById('mix-budget'),out=document.getElementById('mix-out');
+  if(els.some(function(e){return !e;})||!budget||!out)return;
+  function render(){
+    var w=els.map(function(e){return parseFloat(e.value);});
+    var sum=w.reduce(function(a,b){return a+b;},0)||1;
+    var shares=w.map(function(x){return x/sum;});
+    ids.forEach(function(id,i){var o=document.getElementById(id+'-out');if(o)o.textContent=els[i].value;});
+    document.getElementById('mix-budget-out').textContent=budget.value;
+    var labels=['网页','书籍/Wiki','代码/论文','对话']; var parts=[];
+    for(var i=0;i<4;i++){parts.push(labels[i]+' '+(shares[i]*100).toFixed(1)+'%（约 '+(shares[i]*budget.value).toFixed(0)+'B）');}
+    out.textContent='归一化配比：'+parts.join(' / ')+'。';
+  }
+  els.concat([budget]).forEach(function(e){e.addEventListener('input',render);});
+  document.querySelectorAll('.ex-presets button').forEach(function(btn){
+    btn.addEventListener('click',function(){els[0].value=btn.dataset.w;els[1].value=btn.dataset.k;els[2].value=btn.dataset.c;els[3].value=btn.dataset.t;render();});
+  });
+  render();
+})();
+</script>
 </body>
 </html>
