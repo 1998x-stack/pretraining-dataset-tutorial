@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>第11章 模糊去重：MinHash与LSH原理</title>
     <link rel="stylesheet" href="theme.css">
-    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}</style>
+    <style>table{width:100%;max-width:100%;border-collapse:collapse}pre{overflow-x:auto;max-width:100%}.math-scroll{overflow-x:auto;max-width:100%}img,svg{max-width:100%}@media(max-width:480px){table{table-layout:fixed}th,td{overflow-wrap:anywhere}}.ex{border:1px solid #c4b5fd;background:#fbfaff;border-radius:12px;padding:14px 16px;margin:18px 0}.ex h3{margin:0 0 6px;font-size:1.05rem;color:#4c1d95}.ex-row{margin:8px 0}.ex-row label{display:block;font-size:.92rem;margin-bottom:4px}.ex-row input[type=range]{width:100%;max-width:420px}.ex-row output{font-variant-numeric:tabular-nums;font-weight:700;color:#5b21b6}.ex-presets{display:flex;flex-wrap:wrap;gap:8px}.ex-presets button{font:inherit;font-size:.85rem;padding:6px 10px;border:1px solid #a78bfa;background:#fff;color:#5b21b6;border-radius:8px;cursor:pointer}.ex-presets button:focus-visible{outline:3px solid #7c3aed;outline-offset:2px}.ex-out{margin:10px 0 0;padding:8px 10px;background:#ede9fe;border-radius:8px;font-size:.92rem;color:#4c1d95}</style>
 </head>
 <body>
 <a class="skip-link" href="#content">跳转至正文</a>
@@ -228,6 +228,29 @@ def estimate_jaccard(sig_a: list, sig_b: list) -> float:
             <figcaption><span class="fig-label">图 11-1</span>banding 的核心不是比较完整签名，而是逐 band 哈希分桶：只有当某个 band 的 r 个值完全一致时两篇文档才落入同一桶。band 1 相同即成为候选对，band 2/3 不同则不产生碰撞，对应 11.2 节的 P 公式。</figcaption>
         </figure>
 
+        <section class="ex" aria-labelledby="lsh-ex-h">
+            <h3 id="lsh-ex-h">交互实验：b / r 如何决定碰撞概率</h3>
+            <p>给定文档对的 Jaccard 相似度 J、band 数 b、每 band 行数 r，LSH 把它们判为候选对的概率为 P = 1 − (1 − J<sup>r</sup>)<sup>b</sup>。无脚本时默认展示 FineWeb 配置（b=14, r=13, J=0.87）。</p>
+            <div class="ex-row">
+                <label for="lsh-j">J（Jaccard 相似度）：<output id="lsh-j-out" for="lsh-j">0.87</output></label>
+                <input id="lsh-j" type="range" min="0" max="1" step="0.01" value="0.87">
+            </div>
+            <div class="ex-row">
+                <label for="lsh-b">b（band 数）：<output id="lsh-b-out" for="lsh-b">14</output></label>
+                <input id="lsh-b" type="range" min="2" max="32" step="1" value="14">
+            </div>
+            <div class="ex-row">
+                <label for="lsh-r">r（每 band 行数）：<output id="lsh-r-out" for="lsh-r">13</output></label>
+                <input id="lsh-r" type="range" min="2" max="20" step="1" value="13">
+            </div>
+            <div class="ex-row ex-presets" role="group" aria-label="参数预设">
+                <button type="button" data-j="0.87" data-b="14" data-r="13">FineWeb (b=14, r=13)</button>
+                <button type="button" data-j="0.8" data-b="20" data-r="5">11.2 节示例 (b=20, r=5)</button>
+                <button type="button" data-j="0.5" data-b="25" data-r="2">宽松 (b=25, r=2)</button>
+            </div>
+            <p id="lsh-out" class="ex-out" aria-live="polite">当 J = 0.87、b = 14、r = 13 时，碰撞概率 P ≈ 0.999，绝大多数相似度 ≥ 0.87 的文档对都会成为候选。</p>
+        </section>
+
         <div class="tip">
             <strong>参数选择的经验法则：</strong>在预训练数据去重中，通常将阈值设置在 0.7-0.85 之间。设得太低（比如 0.5）会导致大量"只是主题相关但内容不同"的文档被误判为重复；设得太高（比如 0.95）又会漏掉很多经过轻度重写的相似文档。FineWeb 使用的阈值为 0.87（b=14, r=13），Gopher 使用了 0.8（b=450, r=4，但总签名数更多）。
         </div>
@@ -380,5 +403,25 @@ for stats in dedup.stats():
     </article></main>
 </div>
 </div>
+<script>
+(function(){
+  var j=document.getElementById('lsh-j'),b=document.getElementById('lsh-b'),r=document.getElementById('lsh-r');
+  if(!j||!b||!r)return;
+  var jo=document.getElementById('lsh-j-out'),bo=document.getElementById('lsh-b-out'),ro=document.getElementById('lsh-r-out'),out=document.getElementById('lsh-out');
+  function fmt(x){return x<0.001?'<0.001':(x>0.999?'≈1.000':x.toFixed(3));}
+  function render(){
+    var J=parseFloat(j.value),B=parseInt(b.value,10),R=parseInt(r.value,10);
+    var P=1-Math.pow(1-Math.pow(J,R),B);
+    jo.textContent=J.toFixed(2);bo.textContent=B;ro.textContent=R;
+    out.textContent='当 J = '+J.toFixed(2)+'、b = '+B+'、r = '+R+' 时，碰撞概率 P = '+fmt(P)+'；'+
+      (P>=0.9?'几乎必然成为候选对。':P>=0.5?'约半数情况下成为候选对。':'大概率被漏掉（假阴性）。');
+  }
+  [j,b,r].forEach(function(el){el.addEventListener('input',render);});
+  document.querySelectorAll('.ex-presets button').forEach(function(btn){
+    btn.addEventListener('click',function(){j.value=btn.dataset.j;b.value=btn.dataset.b;r.value=btn.dataset.r;render();});
+  });
+  render();
+})();
+</script>
 </body>
 </html>
