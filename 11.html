@@ -248,7 +248,7 @@ def estimate_jaccard(sig_a: list, sig_b: list) -> float:
                 <button type="button" data-j="0.8" data-b="20" data-r="5">11.2 节示例 (b=20, r=5)</button>
                 <button type="button" data-j="0.5" data-b="25" data-r="2">宽松 (b=25, r=2)</button>
             </div>
-            <p id="lsh-out" class="ex-out" aria-live="polite">当 J = 0.87、b = 14、r = 13 时，碰撞概率 P ≈ 0.999，绝大多数相似度 ≥ 0.87 的文档对都会成为候选。</p>
+            <p id="lsh-out" class="ex-out" aria-live="polite">当 J = 0.87、b = 14、r = 13 时，碰撞概率 P ≈ 0.918，约 92% 的相似度 ≥ 0.87 的文档对会成为候选，从而进入精确比较。</p>
         </section>
 
         <div class="tip">
