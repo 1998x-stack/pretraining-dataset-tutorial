@@ -214,3 +214,15 @@ figcaption {
     body { padding: 10px; }
     .main-content { padding: 20px; }
 }
+
+/* === Interactive explorer widgets (progressive enhancement) === */
+.ex { border: 1px solid #c4b5fd; background: #fbfaff; border-radius: 12px; padding: 14px 16px; margin: 18px 0; }
+.ex h3 { margin: 0 0 6px; font-size: 1.05rem; color: #4c1d95; }
+.ex-row { margin: 8px 0; }
+.ex-row label { display: block; font-size: 0.92rem; margin-bottom: 4px; }
+.ex-row input[type=range] { width: 100%; max-width: 420px; }
+.ex-row output { font-variant-numeric: tabular-nums; font-weight: 700; color: #5b21b6; }
+.ex-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.ex-presets button { font: inherit; font-size: 0.85rem; padding: 6px 10px; border: 1px solid #a78bfa; background: #fff; color: #5b21b6; border-radius: 8px; cursor: pointer; }
+.ex-presets button:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.ex-out { margin: 10px 0 0; padding: 8px 10px; background: #ede9fe; border-radius: 8px; font-size: 0.92rem; color: #4c1d95; }
